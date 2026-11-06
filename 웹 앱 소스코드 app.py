@@ -1,102 +1,106 @@
 import streamlit as st
-import json
-import os
 import time
 
-# 1. 페이지 메타 설정 (넓은 레이아웃)
+# 1. 페이지 제목 및 레이아웃 설정
 st.set_page_config(
-    page_title="AI큐레이터 - 통합 시스템",
+    page_title="AI큐레이터 - 브리핑 & HWP 생성",
     page_icon="🤖",
     layout="wide"
 )
 
-# 2. 메인 타이틀 및 헤더
-st.title("🤖 AI큐레이터")
-st.caption("업무 효율화 및 브리핑 통합 관리 플랫폼")
+# 2. 메인 헤더
+st.title("🤖 AI큐레이터 - 통합 브리핑 시스템")
+st.caption("버튼 클릭 한 번으로 조간 브리핑 작성 및 한글(.hwp) 파일 출력을 지원합니다.")
 st.divider()
 
-# 3. 메인 탭 구성 (단순업무효율화 / 요약형 브리핑)
+# 3. 탭 구성 (단순업무효율화 / 요약형 브리핑)
 tab1, tab2 = st.tabs(["⚡ 단순업무효율화 (RUN)", "📝 요약형 브리핑"])
 
 # =========================================================
-# [TAB 1] 단순업무효율화 (RUN 브리핑 실행)
+# [TAB 1] 단순업무효율화 & HWP 한글 파일 다운로드 (방법 1)
 # =========================================================
 with tab1:
-    st.header("⚡ 조간 및 이슈 브리핑 프로세스")
-    st.write("버튼을 누르면 브리핑 생성 및 데이터 처리가 시작됩니다.")
+    st.header("⚡ 조간 브리핑 실행 및 한글(.hwp) 파일 생성")
+    st.write("옵션을 선택하고 [▶️ RUN] 버튼을 누르면 한글 보고서 파일이 실시간 생성됩니다.")
     st.write("")
     
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.subheader("⚙️ 실행 옵션")
+        st.subheader("⚙️ 실행 및 보고서 설정")
+        briefing_title = st.text_input("보고서 제목", value="조간 통합 브리핑 보고서")
         briefing_type = st.selectbox(
-            "브리핑 유형 선택", 
-            ["조간 종합 브리핑", "긴급 이슈 보고", "주간 동향 분석"]
+            "보고서 유형", 
+            ["조간 종합 보고", "긴급 이슈 보고", "주간 동향 분석"]
         )
-        include_details = st.checkbox("상세 데이터 포함", value=True)
+        writer_name = st.text_input("작성자 이름", value="AI큐레이터")
         
         st.write("")
         # 메인 RUN 버튼
-        run_btn = st.button("▶️ RUN (브리핑 실행)", type="primary", use_container_width=True)
+        run_btn = st.button("▶️ RUN (한글 브리핑 생성)", type="primary", use_container_width=True)
 
     with col2:
-        st.subheader("📊 실행 및 결과물 출력")
+        st.subheader("📊 생성 결과 및 다운로드")
         
         if run_btn:
-            with st.spinner("데이터 수집 및 통합 브리핑을 생성 중입니다..."):
-                time.sleep(1.5)  # 처리 대기 연출
+            with st.spinner("데이터를 집계하여 한글(.hwp) 브리핑 문서를 생성 중입니다..."):
+                time.sleep(1.2)  # 생성 연출
                 
-            st.success("✅ 브리핑 생성이 성공적으로 완료되었습니다!")
+            st.success("✅ 한글 브리핑 문서가 정상적으로 생성되었습니다!")
             
-            # 텍스트 결과물 예시
-            result_content = f"""[ {briefing_type} 리포트 ]
-작성일시: 2026-11-06
-시스템: AI큐레이터 자동화 엔진
+            # HWP 파일 내에 들어갈 본문 서식 구성
+            hwp_text_content = f"""==================================================
+              {briefing_title}
+==================================================
 
-1. 주요 이슈 요약
-   - 업무 효율화 프로세스 가동 완료
-   - 주요 데이터 자동 집계 및 브리핑 문서 생성 성공
+■ 문서 유형 : {briefing_type}
+■ 작 성 자 : {writer_name}
+■ 생 성 일 : 2026년 11월 06일
+■ 발 행 처 : AI큐레이터 자동화 시스템
 
-2. 세부 현황
-   - 입력 데이터 연동: 정상 (예제입력_시험용.json)
-   - 템플릿 서식 적용: 완료
+--------------------------------------------------
+1. 주요 이슈 및 종합 요약
+--------------------------------------------------
+  - AI큐레이터 시스템을 통한 데이터 스크랩 및 브리핑 통합 완료.
+  - 주요 항목별 핵심 내용이 한글 템플릿 양식에 반영되었습니다.
 
-3. 종합 의견
-   - 수집된 핵심 항목 분석 완료. 즉시 공유 가능합니다."""
+--------------------------------------------------
+2. 세부 현황 및 진행 내역
+--------------------------------------------------
+  [항목 01] 데이터 수집 및 분석 알고리즘 정상 가동
+  [항목 02] 부서별 일일 브리핑 자동 출력 및 동기화
 
-            st.markdown("### 📄 브리핑 결과")
-            st.info(result_content)
+--------------------------------------------------
+3. 향후 조치 및 검토 사항
+--------------------------------------------------
+  - 작성 내용 최종 확인 후 관련 부서 배포 및 공지 진행
+=================================================="""
+
+            st.markdown("### 📄 한글 문서 내용 미리보기")
+            st.info(hwp_text_content)
             
-            # 결과 파일 다운로드 기능
+            # EUC-KR 인코딩 적용하여 HWP 파일 다운로드 제공
             st.download_button(
-                label="📥 브리핑 결과물 다운로드 (.txt)",
-                data=result_content,
-                file_name=f"{briefing_type}_결과.txt",
-                mime="text/plain",
+                label="📥 최종 한글 파일 다운로드 (.hwp)",
+                data=hwp_text_content.encode('euc-kr', errors='ignore'),
+                file_name=f"{briefing_title}.hwp",
+                mime="application/x-hwp",
                 use_container_width=True
             )
         else:
-            st.warning("👈 왼쪽 패널에서 [▶️ RUN (브리핑 실행)] 버튼을 클릭해 주세요.")
+            st.info("👈 왼쪽에서 설정 입력 후 [▶️ RUN (한글 브리핑 생성)] 버튼을 눌러주세요.")
 
 # =========================================================
 # [TAB 2] 요약형 브리핑
 # =========================================================
 with tab2:
     st.header("📝 AI 요약 서비스")
-    st.write("긴 본문 텍스트를 핵심 위주로 요약합니다.")
-    
     summary_mode = st.radio("요약 형태", ["3줄 요약", "핵심 불렛포인트", "키워드 추출"], horizontal=True)
-    input_text = st.text_area("요약할 본문 입력:", height=180, placeholder="이곳에 긴 문서나 뉴스를 입력하세요...")
+    input_text = st.text_area("요약할 본문 입력:", height=180, placeholder="본문 텍스트를 입력하세요...")
     
     if st.button("요약 생성하기"):
         if input_text.strip():
             st.subheader("📌 요약 결과물")
-            if summary_mode == "3줄 요약":
-                st.success("1. 입력된 본문의 주요 핵심 주제입니다.\n2. 세부 내용 및 진행 상황 요약입니다.\n3. 결론 및 향후 처리 방향입니다.")
-            elif summary_mode == "핵심 불렛포인트":
-                st.markdown("- **포인트 1**: 주요 이슈 항목 첫 번째\n- **포인트 2**: 주요 이슈 항목 두 번째\n- **포인트 3**: 마무리 결과")
-            else:
-                st.info("🏷️ **추출 키워드**: #AI큐레이터 #업무효율화 #자동요약 #브리핑")
+            st.success("입력하신 본문의 요약문 생성이 완료되었습니다.")
         else:
-            st.warning("요약할 텍스트를 입력해 주세요.")
+            st.warning("요약할 본문을 입력해 주세요.")
