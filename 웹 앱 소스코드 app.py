@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 # 1. 기본 설정
 # --------------------------------------------------
 st.set_page_config(
-    page_title="조간 브리핑 통합 작성기",
+    page_title="AI 큐레이터 | 조간 브리핑",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -102,6 +102,7 @@ footer {{
     );
 }}
 
+/* 상단 로고 및 메뉴 */
 .brief-nav {{
     max-width: 1180px;
     margin: 0 auto;
@@ -137,6 +138,7 @@ footer {{
     font-weight: 600;
 }}
 
+/* 첫 화면 중앙 소개 영역 */
 .brief-hero {{
     max-width: 1000px;
     margin: 0 auto;
@@ -178,22 +180,30 @@ footer {{
     word-break: keep-all;
 }}
 
-/* 해시태그 대신 버튼과 설명 사이에 여백을 줍니다. */
+/* 시작 버튼: 박스는 작게, 글자는 크게 */
 .st-key-landing div[data-testid="stButton"] {{
-    margin-top: 55px;
+    width: min(300px, calc(100% - 40px));
+    margin: 55px auto 0;
 }}
 
-/* 브리핑 작성 시작 버튼 */
 .st-key-landing div[data-testid="stButton"] button {{
     width: 100%;
-    min-height: 94px;
-    padding: 16px 24px;
+    min-height: 66px;
+    padding: 10px 12px;
     border: 0;
     border-radius: 10px;
     background: #ffffff;
     color: #11245b;
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 800;
+    white-space: nowrap;
+}}
+
+.st-key-landing div[data-testid="stButton"] button p {{
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
     white-space: nowrap;
 }}
 
@@ -202,6 +212,7 @@ footer {{
     color: #11245b;
 }}
 
+/* 작성기 화면 */
 .st-key-editor_page {{
     min-height: 100vh;
     background: #eef3fb;
@@ -235,9 +246,13 @@ footer {{
         border-width: 13px;
     }}
 
+    .st-key-landing div[data-testid="stButton"] {{
+        width: min(270px, calc(100% - 40px));
+    }}
+
     .st-key-landing div[data-testid="stButton"] button {{
-        min-height: 76px;
-        font-size: 20px;
+        min-height: 62px;
+        font-size: 26px;
     }}
 }}
 </style>
@@ -254,7 +269,7 @@ if st.session_state.page == "home":
         landing_html = (
             '<div class="brief-nav">'
                 '<div class="brief-logo">'
-                    'morning brief'
+                    'AI 큐레이터'
                     '<small>하루를 시작하는 조간 브리핑</small>'
                 '</div>'
                 '<div class="brief-menu">'
@@ -274,17 +289,13 @@ if st.session_state.page == "home":
 
         st.markdown(landing_html, unsafe_allow_html=True)
 
-        # 기존보다 약 2배 넓은 가운데 열에 버튼을 배치합니다.
-        left, center, right = st.columns([3, 4, 3])
-
-        with center:
-            if st.button(
-                "브리핑 작성 시작",
-                key="start_briefing",
-                use_container_width=True,
-            ):
-                st.session_state.page = "editor"
-                st.rerun()
+        if st.button(
+            "브리핑 작성 시작",
+            key="start_briefing",
+            use_container_width=True,
+        ):
+            st.session_state.page = "editor"
+            st.rerun()
 
 
 # --------------------------------------------------
@@ -313,7 +324,7 @@ else:
                 errors="replace",
             )
 
-        # 원본 작성기 기능은 건드리지 않고 스타일만 추가합니다.
+        # 원본 HTML의 기능은 유지하고 색상·폰트만 적용합니다.
         editor_css = f"""
         <style>
         {font_face_css}
