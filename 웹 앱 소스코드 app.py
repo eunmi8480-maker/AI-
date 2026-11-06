@@ -89,3 +89,13 @@ if st.button("🚀 Run (데이터 수집 및 HTML 자동 오픈)"):
         </script>
     """
     components.html(js_code, height=0)
+import streamlit as st
+import time
+
+latest_bar = st.progress(0)
+status_text = st.empty()
+
+for i in range(total_items):
+    # 수집 처리...
+    latest_bar.progress((i + 1) / total_items)
+    status_text.text(f"뉴스 수집 중... ({i+1}/{total_items})")
