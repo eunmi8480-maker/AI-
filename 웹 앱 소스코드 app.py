@@ -102,30 +102,25 @@ import os
 import streamlit as st
 import streamlit.components.v1 as components
 
-# 현재 파이썬 파일(app.py)이 있는 폴더의 절대 경로 추출
+# 1. 현재 app.py 파일이 위치한 폴더 경로 구하기
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 불러올 파일명을 BASE_DIR과 연결
-html_file_path = os.path.join(BASE_DIR, "your_file.html")  # 실제 파일명으로 변경
-hwp_file_path = os.path.join(BASE_DIR, "your_file.hwp")    # 실제 파일명으로 변경
+# 2. 실제 불러올 HTML 파일명 지정 (★ 본인의 파일명으로 수정 필요)
+HTML_FILE_NAME = "실제_HTML_파일명.html"  # 예: "index.html" 또는 "template.html"
+html_file_path = os.path.join(BASE_DIR, HTML_FILE_NAME)
 
-# 1. HTML 파일 화면에 렌더링 (안전한 예외 처리 포함)
+# 3. 파일 존재 여부 확인 후 Streamlit에 렌더링
 if os.path.exists(html_file_path):
-    with open(html_file_path, "r", encoding="utf-8") as f:
-        html_content = f.read()
+    # 인코딩 에러 방지 (utf-8 및 cp949 지원)
+    try:
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+    except UnicodeDecodeError:
+        with open(html_file_path, "r", encoding="cp949") as f:
+            html_content = f.read()
+            
+    # HTML 화면 원본 양식대로 출력
     components.html(html_content, height=800, scrolling=True)
 else:
-    st.error(f"⚠️ HTML 파일을 찾을 수 없습니다: `{html_file_path}`")
-    st.info("파일이 app.py와 같은 폴더(또는 GitHub 리포지토리)에 올라가 있는지 확인해 주세요.")
-
-# 2. HWP 파일 다운로드 버튼 (안전한 예외 처리 포함)
-if os.path.exists(hwp_file_path):
-    with open(hwp_file_path, "rb") as f:
-        st.download_button(
-            label="📄 완성된 한글파일(.hwp) 다운로드",
-            data=f,
-            file_name="조간브리핑_최종.hwp",
-            mime="application/x-hwp"
-        )
-else:
-    st.error(f"⚠️ HWP 파일을 찾을 수 없습니다: `{hwp_file_path}`")
+    st.error(f"❌ HTML 파일을 찾을 수 없습니다: `{html_file_path}`")
+    st.info(f"👉 `{HTML_FILE_NAME}` 파일이 `app.py`와 같은 폴더에 업로드되어 있는지 확인해 주세요.")
