@@ -4,6 +4,11 @@ import base64
 import streamlit as st
 import streamlit.components.v1 as components
 
+from scrapmaster_server import (
+    show_collection_controls,
+    inject_payload,
+)
+
 
 # --------------------------------------------------
 # 1. 기본 설정
@@ -14,24 +19,29 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 
-HTML_CANDIDATES = [
-    BASE_DIR / "조간브리핑_통합작성기.html",
-    BASE_DIR / "완성본_조간브리핑_통합작성기.html",
-]
+# 서버 연결 기능이 적용된 HTML만 사용합니다.
+HTML_PATH = BASE_DIR / "조간브리핑_통합작성기_서버연결.html"
 
-HTML_PATH = next(
-    (path for path in HTML_CANDIDATES if path.is_file()),
-    None,
-)
+# 왼쪽 상단 로고 이미지입니다.
+LOGO_PATH = BASE_DIR / "ai_curator_logo.png"
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
 
 # --------------------------------------------------
-# 2. KoPub돋움체 파일 읽기
+# 2. 파일을 Base64로 변환하는 함수
+# --------------------------------------------------
+def file_to_base64(file_path: Path) -> str:
+    return base64.b64encode(
+        file_path.read_bytes()
+    ).decode("ascii")
+
+
+# --------------------------------------------------
+# 3. KoPub돋움체 파일 읽기
 # --------------------------------------------------
 FONT_CANDIDATES = [
     (BASE_DIR / "KoPubDotum.woff2", "font/woff2", "woff2"),
@@ -42,9 +52,7 @@ font_face_css = ""
 
 for font_path, mime_type, font_format in FONT_CANDIDATES:
     if font_path.is_file():
-        encoded_font = base64.b64encode(
-            font_path.read_bytes()
-        ).decode("ascii")
+        encoded_font = file_to_base64(font_path)
 
         font_face_css = f"""
         @font-face {{
@@ -60,7 +68,31 @@ for font_path, mime_type, font_format in FONT_CANDIDATES:
 
 
 # --------------------------------------------------
-# 3. 홈페이지 및 작성기 화면 스타일
+# 4. 왼쪽 상단 로고 구성
+# --------------------------------------------------
+if LOGO_PATH.is_file():
+    encoded_logo = file_to_base64(LOGO_PATH)
+
+    logo_html = f"""
+    <div class="brief-logo brief-logo-image">
+        <img
+            src="data:image/png;base64,{encoded_logo}"
+            alt="AI CURATOR | 하루를 시작하는 조간 브리핑"
+        >
+    </div>
+    """
+else:
+    # 이미지가 없을 때 기존 텍스트 로고를 표시합니다.
+    logo_html = """
+    <div class="brief-logo brief-logo-text">
+        AI 큐레이터
+        <small>하루를 시작하는 조간 브리핑</small>
+    </div>
+    """
+
+
+# --------------------------------------------------
+# 5. 홈페이지 및 작성기 화면 스타일
 # --------------------------------------------------
 page_css = f"""
 <style>
@@ -102,7 +134,7 @@ footer {{
     );
 }}
 
-/* 상단 로고 및 메뉴 */
+/* 상단 로고와 메뉴 */
 .brief-nav {{
     max-width: 1180px;
     margin: 0 auto;
@@ -113,7 +145,7 @@ footer {{
     gap: 24px;
 }}
 
-.brief-logo {{
+.brief-logo-text {{
     color: #ffffff;
     font-size: 28px;
     font-weight: 800;
@@ -121,12 +153,24 @@ footer {{
     line-height: 1.1;
 }}
 
-.brief-logo small {{
+.brief-logo-text small {{
     display: block;
     margin-top: 8px;
     font-size: 12px;
     font-weight: 400;
     letter-spacing: 0;
+}}
+
+.brief-logo-image {{
+    width: min(400px, 55vw);
+    line-height: 0;
+}}
+
+.brief-logo-image img {{
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
 }}
 
 .brief-menu {{
@@ -180,10 +224,7 @@ footer {{
     word-break: keep-all;
 }}
 
-/*
- * 시작 버튼의 Streamlit 고유 key를 직접 선택합니다.
- * 버튼뿐 아니라 내부 p/span에도 글자 크기를 적용하는 것이 핵심입니다.
- */
+/* 브리핑 시작 버튼 */
 .st-key-start_briefing {{
     width: min(300px, calc(100% - 40px));
     margin: 55px auto 0;
@@ -233,14 +274,20 @@ footer {{
 @media (max-width: 640px) {{
     .brief-nav {{
         padding: 22px 20px;
+        gap: 12px;
     }}
 
-    .brief-logo {{
+    .brief-logo-text {{
         font-size: 22px;
+    }}
+
+    .brief-logo-image {{
+        width: min(270px, 62vw);
     }}
 
     .brief-menu {{
         gap: 14px;
+        padding-top: 5px;
         font-size: 13px;
     }}
 
@@ -271,16 +318,13 @@ st.markdown(page_css, unsafe_allow_html=True)
 
 
 # --------------------------------------------------
-# 4. 첫 화면
+# 6. 첫 화면
 # --------------------------------------------------
 if st.session_state.page == "home":
     with st.container(key="landing"):
         landing_html = (
             '<div class="brief-nav">'
-                '<div class="brief-logo">'
-                    'AI 큐레이터'
-                    '<small>하루를 시작하는 조간 브리핑</small>'
-                '</div>'
+                f'{logo_html}'
                 '<div class="brief-menu">'
                     '<span>홈</span>'
                     '<span>브리핑 작성</span>'
@@ -288,15 +332,20 @@ if st.session_state.page == "home":
             '</div>'
             '<div class="brief-hero">'
                 '<div class="brief-ring"></div>'
-                '<h1><span>오늘의 뉴스,</span><br>한눈에 정리하세요.</h1>'
+                '<h1><span>오늘의 뉴스,</span><br>'
+                '한눈에 정리하세요.</h1>'
                 '<p>'
                     '워드클라우드부터 주요 기사와 정부 동향까지.<br>'
-                    '필요한 내용을 입력하고 조간 브리핑을 완성해 보세요.'
+                    '필요한 내용을 입력하고 조간 브리핑을 '
+                    '완성해 보세요.'
                 '</p>'
             '</div>'
         )
 
-        st.markdown(landing_html, unsafe_allow_html=True)
+        st.markdown(
+            landing_html,
+            unsafe_allow_html=True,
+        )
 
         if st.button(
             "브리핑 작성 시작",
@@ -308,24 +357,45 @@ if st.session_state.page == "home":
 
 
 # --------------------------------------------------
-# 5. 두 번째 화면: 기존 HTML 작성기
+# 7. 두 번째 화면: 서버 수집 기능과 HTML 작성기
 # --------------------------------------------------
 else:
     with st.container(key="editor_page"):
-        if st.button("← 홈으로", key="back_home"):
-            st.session_state.page = "home"
-            st.rerun()
+        top_left, top_right = st.columns(
+            [1, 8],
+            vertical_alignment="center",
+        )
 
-        if HTML_PATH is None:
+        with top_left:
+            if st.button(
+                "← 홈으로",
+                key="back_home",
+                use_container_width=True,
+            ):
+                st.session_state.page = "home"
+                st.rerun()
+
+        with top_right:
+            st.caption(
+                "날짜를 선택하여 서버에서 키워드를 수집한 뒤 "
+                "아래 작성기에 반영할 수 있습니다."
+            )
+
+        # scrapmaster_server.py에 구현된 날짜 및 수집 버튼입니다.
+        show_collection_controls()
+
+        if not HTML_PATH.is_file():
             st.error(
-                "HTML 양식 파일을 찾을 수 없습니다. "
-                "app.py와 같은 폴더에 양식 파일을 넣어 주세요."
+                "서버 연결용 HTML 양식 파일을 찾을 수 없습니다. "
+                "app.py와 같은 폴더에 "
+                "'조간브리핑_통합작성기_서버연결.html'을 "
+                "넣어 주세요."
             )
             st.stop()
 
         try:
             html_content = HTML_PATH.read_text(
-                encoding="utf-8-sig"
+                encoding="utf-8-sig",
             )
         except UnicodeDecodeError:
             html_content = HTML_PATH.read_text(
@@ -333,7 +403,10 @@ else:
                 errors="replace",
             )
 
-        # 원본 HTML의 기능은 유지하고 색상·폰트만 덧씌웁니다.
+        # Python에서 조회한 키워드 데이터와 적용 코드를 주입합니다.
+        html_content = inject_payload(html_content)
+
+        # 원본 HTML의 기능은 유지하고 색상과 폰트를 덧씌웁니다.
         editor_css = f"""
         <style>
         {font_face_css}
