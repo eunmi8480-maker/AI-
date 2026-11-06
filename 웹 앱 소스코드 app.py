@@ -17,7 +17,6 @@ st.set_page_config(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# 사용할 수 있는 작성기 HTML 파일을 순서대로 찾습니다.
 HTML_CANDIDATES = [
     BASE_DIR / "조간브리핑_통합작성기_서버연결.html",
     BASE_DIR / "조간브리핑_통합작성기.html",
@@ -47,9 +46,11 @@ def file_to_base64(file_path: Path) -> str:
 
 
 def read_text_file(file_path: Path) -> str:
-    """UTF-8을 먼저 사용하고 실패하면 CP949로 읽습니다."""
+    """UTF-8로 읽고 실패하면 CP949로 읽습니다."""
     try:
-        return file_path.read_text(encoding="utf-8-sig")
+        return file_path.read_text(
+            encoding="utf-8-sig",
+        )
     except UnicodeDecodeError:
         return file_path.read_text(
             encoding="cp949",
@@ -108,7 +109,6 @@ if LOGO_PATH.is_file():
     </div>
     """
 else:
-    # 이미지 파일이 없어도 앱이 중단되지 않습니다.
     logo_html = """
     <div class="brief-logo brief-logo-text">
         AI CURATOR
@@ -118,11 +118,24 @@ else:
 
 
 # ==================================================
-# 5. 전체 화면 CSS
+# 5. Streamlit 전체 화면 CSS
 # ==================================================
 page_css = f"""
 <style>
 {font_face_css}
+
+:root {{
+    --navy: #0d1c59;
+    --navy-dark: #081442;
+    --navy-soft: #223d78;
+    --sky: #9be7ff;
+    --sky-soft: #dff6ff;
+    --paper: #ffffff;
+    --paper-blue: #f3f8ff;
+    --line: #b7c9e3;
+    --text: #102653;
+    --muted: #60769b;
+}}
 
 html,
 body,
@@ -132,6 +145,11 @@ body,
 .stApp textarea,
 .stApp select {{
     font-family: "KoPubDotum", sans-serif !important;
+}}
+
+.stApp {{
+    min-height: 100vh;
+    background: var(--navy);
 }}
 
 .block-container {{
@@ -147,21 +165,22 @@ footer {{
     display: none;
 }}
 
-/* 첫 화면 */
+/* ==================================================
+   첫 화면
+   ================================================== */
 .st-key-landing {{
     min-height: 100vh;
     color: #ffffff;
     background:
         linear-gradient(
             180deg,
-            #0b1957 0%,
-            #0b1957 48%,
-            #35558e 77%,
+            #0d1c59 0%,
+            #0d1c59 48%,
+            #29477f 77%,
             #7895be 100%
         );
 }}
 
-/* 상단 로고와 메뉴 */
 .brief-nav {{
     max-width: 1180px;
     margin: 0 auto;
@@ -209,7 +228,6 @@ footer {{
     font-weight: 600;
 }}
 
-/* 중앙 문구 */
 .brief-hero {{
     max-width: 1000px;
     margin: 0 auto;
@@ -225,7 +243,7 @@ footer {{
     border: 17px solid transparent;
     border-radius: 50%;
     background:
-        linear-gradient(#0b1957, #0b1957) padding-box,
+        linear-gradient(#0d1c59, #0d1c59) padding-box,
         linear-gradient(135deg, #a4f5ff, #3188ff) border-box;
     transform: rotate(-28deg) skew(-10deg);
 }}
@@ -240,7 +258,7 @@ footer {{
 }}
 
 .brief-hero h1 span {{
-    color: #a9e6ff;
+    color: var(--sky);
 }}
 
 .brief-hero p {{
@@ -251,9 +269,9 @@ footer {{
     word-break: keep-all;
 }}
 
-/* 브리핑 시작 버튼 */
+/* 시작 버튼 */
 .st-key-start_briefing {{
-    width: min(300px, calc(100% - 40px));
+    width: min(310px, calc(100% - 40px));
     margin: 55px auto 0;
 }}
 
@@ -285,29 +303,84 @@ footer {{
 }}
 
 .st-key-start_briefing button:hover {{
-    background: #e7f2ff !important;
+    background: var(--sky-soft) !important;
 }}
 
-/* 작성기 화면 */
+/* ==================================================
+   작성기 화면
+   ================================================== */
 .st-key-editor_page {{
+    box-sizing: border-box;
     min-height: 100vh;
-    background: #eef3fb;
+    color: #ffffff;
+    background:
+        linear-gradient(
+            180deg,
+            #0d1c59 0%,
+            #0d1c59 25%,
+            #29477f 58%,
+            #7895be 100%
+        );
+}}
+
+.st-key-editor_page > div {{
+    box-sizing: border-box;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 24px 36px;
+}}
+
+.editor-header {{
+    margin: 0 0 18px;
+    padding: 12px 4px 8px;
+}}
+
+.editor-title {{
+    margin: 0;
+    color: var(--sky);
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1.3;
+}}
+
+.editor-description {{
+    margin: 8px 0 0;
+    color: #edf4ff;
+    font-size: 15px;
+    line-height: 1.7;
 }}
 
 .st-key-editor_page div[data-testid="stIFrame"] {{
     width: 100%;
+    overflow: hidden;
+    border: 1px solid #6f8fbd;
+    border-radius: 12px;
+    background: #ffffff;
 }}
 
-/* 안내 영역 */
-.editor-guide {{
-    margin: 0;
-    padding: 10px 16px;
-    background: #fff8dc;
+/* 홈으로 버튼 */
+.st-key-back_home button {{
+    min-height: 42px !important;
+    border: 1px solid #ffffff !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: var(--navy) !important;
+    font-weight: 800 !important;
+}}
+
+.st-key-back_home button:hover {{
+    background: var(--sky-soft) !important;
+}}
+
+/* 작성기 파일 안내 */
+.editor-file-error {{
+    margin: 24px;
+    padding: 22px;
     border: 1px solid #e3cf82;
-    border-radius: 8px;
+    border-radius: 10px;
+    background: #fff8dc;
     color: #5a4914;
-    font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
 }}
 
 @media (max-width: 640px) {{
@@ -341,13 +414,21 @@ footer {{
     }}
 
     .st-key-start_briefing {{
-        width: min(270px, calc(100% - 40px));
+        width: min(280px, calc(100% - 40px));
     }}
 
     .st-key-start_briefing button,
     .st-key-start_briefing button p,
     .st-key-start_briefing button span {{
-        font-size: 30px !important;
+        font-size: 29px !important;
+    }}
+
+    .st-key-editor_page > div {{
+        padding: 14px 10px 24px;
+    }}
+
+    .editor-header {{
+        padding: 6px 2px;
     }}
 }}
 </style>
@@ -405,12 +486,12 @@ if st.session_state.page == "home":
 # ==================================================
 else:
     with st.container(key="editor_page"):
-        top_left, top_right = st.columns(
-            [1, 8],
+        navigation_column, title_column = st.columns(
+            [1.2, 8.8],
             vertical_alignment="center",
         )
 
-        with top_left:
+        with navigation_column:
             if st.button(
                 "← 홈으로",
                 key="back_home",
@@ -419,13 +500,17 @@ else:
                 st.session_state.page = "home"
                 st.rerun()
 
-        with top_right:
+        with title_column:
             st.markdown(
                 """
-                <div class="editor-guide">
-                    작성기 화면입니다. 현재 버전은 별도 Python
-                    모듈 없이 실행됩니다. 로컬 ScrapMaster 브리지
-                    기능은 HTML 작성기의 기존 설정에 따라 작동합니다.
+                <div class="editor-header">
+                    <h1 class="editor-title">
+                        조간 브리핑 작성
+                    </h1>
+                    <p class="editor-description">
+                        워드클라우드, 주요 기사와 정부 동향을
+                        입력하고 브리핑을 완성하세요.
+                    </p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -437,15 +522,16 @@ else:
                 for path in HTML_CANDIDATES
             )
 
-            st.error(
-                "작성기 HTML 파일을 찾을 수 없습니다."
-            )
-
             st.markdown(
                 (
-                    "GitHub에서 `app.py`와 같은 폴더에 "
-                    "다음 파일 중 하나를 올려 주세요.<br><br>"
-                    f"{candidate_names}"
+                    '<div class="editor-file-error">'
+                    '<strong>작성기 HTML 파일을 찾을 수 '
+                    '없습니다.</strong><br><br>'
+                    'GitHub에서 app.py와 같은 폴더에 '
+                    '다음 파일 중 하나를 올려 주세요.'
+                    '<br><br>'
+                    f'{candidate_names}'
+                    '</div>'
                 ),
                 unsafe_allow_html=True,
             )
@@ -461,10 +547,25 @@ else:
             st.code(str(error))
             st.stop()
 
-        # 원본 HTML 기능은 그대로 두고 색상과 폰트만 추가합니다.
+        # ==================================================
+        # 작성기 iframe 내부 테마
+        # ==================================================
         editor_css = f"""
         <style>
         {font_face_css}
+
+        :root {{
+            --navy: #0d1c59;
+            --navy-dark: #081442;
+            --navy-soft: #223d78;
+            --sky: #9be7ff;
+            --sky-soft: #dff6ff;
+            --paper: #ffffff;
+            --paper-blue: #f3f8ff;
+            --line: #b7c9e3;
+            --text: #102653;
+            --muted: #60769b;
+        }}
 
         html,
         body,
@@ -484,63 +585,256 @@ else:
             font-family: "KoPubDotum", sans-serif !important;
         }}
 
-        body {{
-            background: #eef3fb;
-            color: #172b48;
+        html {{
+            min-height: 100%;
+            background: var(--navy);
         }}
 
+        body {{
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text);
+            background:
+                linear-gradient(
+                    180deg,
+                    var(--navy) 0,
+                    var(--navy) 180px,
+                    #29477f 430px,
+                    #7895be 100%
+                );
+        }}
+
+        /* 작성기 내부 상단 */
         header.top {{
-            background: #0b1957;
-            color: #ffffff;
+            box-sizing: border-box;
+            min-height: 150px;
+            padding: 28px 34px !important;
+            color: #ffffff !important;
+            background: var(--navy) !important;
+            border-bottom:
+                1px solid rgba(255, 255, 255, 0.14);
+        }}
+
+        header.top h1,
+        header.top h2,
+        header.top h3 {{
+            margin-top: 0;
+            color: var(--sky) !important;
+            font-weight: 800 !important;
         }}
 
         header.top p {{
-            color: #d9e5ff;
+            color: #eef5ff !important;
         }}
 
+        /* 작성기 내부 기능 막대 */
         .bar {{
-            background: #f8faff;
-            border-bottom: 1px solid #cbd8ed;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 12px 18px !important;
+            background: rgba(13, 28, 89, 0.97) !important;
+            border-top:
+                1px solid rgba(255, 255, 255, 0.12);
+            border-bottom:
+                1px solid #426196 !important;
         }}
 
+        .bar button,
+        .bar label.file {{
+            background: #ffffff !important;
+            border: 1px solid #ffffff !important;
+            color: var(--navy) !important;
+            font-weight: 800 !important;
+        }}
+
+        .bar button:hover,
+        .bar label.file:hover {{
+            background: var(--sky-soft) !important;
+            border-color: var(--sky) !important;
+        }}
+
+        /* 왼쪽 입력 영역 */
+        aside {{
+            background:
+                rgba(235, 243, 255, 0.96) !important;
+            border-right:
+                1px solid var(--line) !important;
+        }}
+
+        aside h2,
+        aside h3,
+        aside h4 {{
+            color: var(--navy) !important;
+        }}
+
+        /* 카드 */
+        .card {{
+            background:
+                rgba(255, 255, 255, 0.98) !important;
+            border:
+                1px solid var(--line) !important;
+            border-radius: 10px !important;
+            box-shadow: none !important;
+        }}
+
+        .card h2,
+        .card h3,
+        .card h4 {{
+            color: var(--navy) !important;
+        }}
+
+        /* 입력 요소 */
+        input,
+        textarea,
+        select {{
+            box-sizing: border-box;
+            background: #ffffff !important;
+            color: var(--text) !important;
+            border:
+                1px solid #aabedc !important;
+            border-radius: 7px !important;
+        }}
+
+        input:focus,
+        textarea:focus,
+        select:focus {{
+            outline:
+                3px solid rgba(79, 181, 255, 0.22) !important;
+            border-color: #438bd2 !important;
+        }}
+
+        input::placeholder,
+        textarea::placeholder {{
+            color: #8191aa !important;
+        }}
+
+        /* 일반 버튼 */
         button,
         label.file {{
-            border-color: #b9c9e2;
-            color: #153362;
+            border:
+                1px solid #9eb5d5 !important;
+            border-radius: 7px !important;
+            background: #f5f9ff !important;
+            color: var(--navy) !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
         }}
 
         button:hover,
         label.file:hover {{
-            background: #e8f1ff;
+            background: var(--sky-soft) !important;
+            border-color: #5da9df !important;
         }}
 
+        /* 주요 버튼 */
         button.primary {{
-            background: #2256a0;
-            border-color: #2256a0;
-            color: #ffffff;
+            background: var(--navy) !important;
+            border-color: var(--navy) !important;
+            color: #ffffff !important;
         }}
 
         button.primary:hover {{
-            background: #174584;
+            background: #183477 !important;
+            border-color: #183477 !important;
         }}
 
-        aside {{
-            background: #e5edfa;
+        /* 문서 미리보기 */
+        main,
+        .preview,
+        .paper,
+        .page {{
+            color: var(--text);
         }}
 
-        .card {{
+        .paper,
+        .page {{
+            background: #ffffff !important;
+            border-color: #c1cee1 !important;
+            box-shadow: none !important;
+        }}
+
+        /* 표 */
+        table {{
+            border-color: var(--line) !important;
+        }}
+
+        th {{
+            background: #e8f1ff !important;
+            color: var(--navy) !important;
+        }}
+
+        td {{
             background: #ffffff;
-            border-color: #d4e0f1;
+            color: var(--text);
         }}
 
-        input,
-        textarea {{
-            border-color: #c3d1e5;
+        /* 보조 문구 */
+        small,
+        .help,
+        .hint,
+        .muted {{
+            color: var(--muted) !important;
+        }}
+
+        /* 링크 */
+        a {{
+            color: #2267af !important;
+        }}
+
+        a:hover {{
+            color: var(--navy) !important;
+        }}
+
+        /* 스크롤바 */
+        ::-webkit-scrollbar {{
+            width: 10px;
+            height: 10px;
+        }}
+
+        ::-webkit-scrollbar-track {{
+            background: #dce7f6;
+        }}
+
+        ::-webkit-scrollbar-thumb {{
+            background: #7895be;
+            border: 2px solid #dce7f6;
+            border-radius: 8px;
         }}
 
         @media print {{
+            html,
             body {{
-                background: #ffffff;
+                background: #ffffff !important;
+            }}
+
+            header.top,
+            .bar,
+            aside {{
+                display: none !important;
+            }}
+
+            .paper,
+            .page {{
+                border: 0 !important;
+            }}
+        }}
+
+        @media (max-width: 760px) {{
+            header.top {{
+                min-height: 120px;
+                padding: 22px 18px !important;
+            }}
+
+            .bar {{
+                position: static;
+                padding: 10px !important;
+            }}
+
+            aside {{
+                border-right: 0 !important;
+                border-bottom:
+                    1px solid var(--line) !important;
             }}
         }}
         </style>
