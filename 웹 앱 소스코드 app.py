@@ -180,38 +180,44 @@ footer {{
     word-break: keep-all;
 }}
 
-/* 버튼 박스 크기는 유지하고 글자만 키웁니다. */
-.st-key-landing div[data-testid="stButton"] {{
+/*
+ * 시작 버튼의 Streamlit 고유 key를 직접 선택합니다.
+ * 버튼뿐 아니라 내부 p/span에도 글자 크기를 적용하는 것이 핵심입니다.
+ */
+.st-key-start_briefing {{
     width: min(300px, calc(100% - 40px));
     margin: 55px auto 0;
 }}
 
-.st-key-landing div[data-testid="stButton"] button {{
-    width: 100%;
-    min-height: 66px;
-    padding: 8px;
-    border: 0;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #11245b;
+.st-key-start_briefing button {{
+    width: 100% !important;
+    min-height: 66px !important;
+    padding: 6px 8px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #11245b !important;
+    font-family: "KoPubDotum", sans-serif !important;
     font-size: 36px !important;
-    font-weight: 800;
-    line-height: 1.1;
-    white-space: nowrap;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
 }}
 
-.st-key-landing div[data-testid="stButton"] button p {{
-    margin: 0;
-    color: inherit;
-    font-size: inherit !important;
-    font-weight: inherit;
-    line-height: inherit;
-    white-space: nowrap;
+.st-key-start_briefing button p,
+.st-key-start_briefing button span {{
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #11245b !important;
+    font-family: "KoPubDotum", sans-serif !important;
+    font-size: 36px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
 }}
 
-.st-key-landing div[data-testid="stButton"] button:hover {{
-    background: #e7f2ff;
-    color: #11245b;
+.st-key-start_briefing button:hover {{
+    background: #e7f2ff !important;
 }}
 
 /* 작성기 화면 */
@@ -248,12 +254,13 @@ footer {{
         border-width: 13px;
     }}
 
-    .st-key-landing div[data-testid="stButton"] {{
+    .st-key-start_briefing {{
         width: min(270px, calc(100% - 40px));
     }}
 
-    .st-key-landing div[data-testid="stButton"] button {{
-        min-height: 62px;
+    .st-key-start_briefing button,
+    .st-key-start_briefing button p,
+    .st-key-start_briefing button span {{
         font-size: 30px !important;
     }}
 }}
@@ -326,7 +333,7 @@ else:
                 errors="replace",
             )
 
-        # 기존 작성기의 기능은 유지하고 스타일만 추가합니다.
+        # 원본 HTML의 기능은 유지하고 색상·폰트만 덧씌웁니다.
         editor_css = f"""
         <style>
         {font_face_css}
