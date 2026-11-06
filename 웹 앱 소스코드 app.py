@@ -70,3 +70,22 @@ if 'final_result' in st.session_state:
     )
 else:
     st.info("💡 위의 [Run] 버튼을 눌러 데이터를 수집하면 다운로드 버튼이 활성화됩니다.")
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.title("📰 조간 브리핑 통합 작성기")
+
+# 1. 실행 버튼 (Run)
+if st.button("🚀 Run (데이터 수집 및 HTML 자동 오픈)"):
+    # 수집하고자 하는 대상 링크 또는 생성된 HTML 페이지 URL/경로
+    target_url = "https://wv.scrapmaster.co.kr/login.do?uid=gbpr5v"  # 예시 링크
+    
+    st.success("데이터 수집 중... HTML 링크 페이지를 새 탭에서 엽니다.")
+    
+    # JavaScript를 이용해 브라우저 새 탭 자동 연동
+    js_code = f"""
+        <script>
+            window.open('{target_url}', '_blank');
+        </script>
+    """
+    components.html(js_code, height=0)
