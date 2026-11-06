@@ -1,195 +1,245 @@
 from pathlib import Path
+import base64
 
 import streamlit as st
 import streamlit.components.v1 as components
 
+
+# --------------------------------------------------
+# 1. 기본 설정 및 파일 위치
+# --------------------------------------------------
 st.set_page_config(
     page_title="조간 브리핑 통합 작성기",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# 현재 프로젝트에서 사용 중인 실제 파일명으로 맞춰 주세요.
-html_path = Path(__file__).parent / "조간브리핑_통합작성기.html"
+BASE_DIR = Path(__file__).parent
+HTML_PATH = BASE_DIR / "조간브리핑_통합작성기.html"
+FONT_PATH = BASE_DIR / "KoPubDotum.woff2"
 
-# Streamlit 페이지 자체의 스타일
-st.markdown(
+
+# --------------------------------------------------
+# 2. KoPub돋움체 불러오기
+# --------------------------------------------------
+font_face_css = ""
+
+if FONT_PATH.is_file():
+    font_base64 = base64.b64encode(
+        FONT_PATH.read_bytes()
+    ).decode("ascii")
+
+    font_face_css = f"""
+    @font-face {{
+        font-family: 'KoPubDotum';
+        src: url('data:font/woff2;base64,{font_base64}') format('woff2');
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+    }}
     """
-    <style>
-    .block-container {
-        max-width: 100%;
-        padding: 0 0 4rem 0;
-    }
+else:
+    st.warning(
+        "KoPubDotum.woff2 파일을 찾지 못했습니다. "
+        "파일을 app.py와 같은 폴더에 넣으면 KoPub돋움체가 적용됩니다."
+    )
 
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
 
-    .brief-home {
-        color: #fff;
-        background: linear-gradient(
-            180deg,
-            #0b1957 0%,
-            #0b1957 50%,
-            #34558f 78%,
-            #7894bf 100%
-        );
-    }
+# --------------------------------------------------
+# 3. Streamlit 홈페이지 디자인
+# --------------------------------------------------
+page_css = f"""
+<style>
+{font_face_css}
 
-    .brief-nav {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 24px 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-    }
+html,
+body,
+.stApp,
+.stApp button,
+.stApp input,
+.stApp textarea,
+.stApp select {{
+    font-family: 'KoPubDotum', sans-serif !important;
+}}
 
-    .brief-logo {
-        color: #fff !important;
-        text-decoration: none !important;
-        font-size: 27px;
-        font-weight: 800;
-        letter-spacing: -1px;
-        line-height: 1.15;
-    }
+.block-container {{
+    max-width: 100%;
+    padding: 0 0 4rem 0;
+}}
 
-    .brief-logo small {
-        display: block;
-        margin-top: 7px;
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0;
-    }
+header[data-testid="stHeader"] {{
+    background: transparent;
+}}
 
-    .brief-menu {
-        display: flex;
-        gap: 32px;
-    }
+.brief-home {{
+    color: #fff;
+    background: linear-gradient(
+        180deg,
+        #0b1957 0%,
+        #0b1957 50%,
+        #34558f 78%,
+        #7894bf 100%
+    );
+}}
 
-    .brief-menu a {
-        color: #e1e9fa !important;
-        text-decoration: none !important;
-        font-weight: 600;
-    }
+.brief-nav {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}}
 
-    .brief-hero {
-        max-width: 1050px;
-        min-height: 510px;
-        margin: 0 auto;
-        padding: 68px 24px 72px;
-        text-align: center;
-    }
+.brief-logo {{
+    color: #fff !important;
+    text-decoration: none !important;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+}}
 
-    .brief-ring {
-        width: 82px;
-        height: 82px;
-        margin: 0 auto 38px;
-        border: 17px solid transparent;
-        border-radius: 50%;
-        background:
-            linear-gradient(#0b1957, #0b1957) padding-box,
-            linear-gradient(135deg, #a9f8ff, #3185ff) border-box;
-        transform: rotate(-28deg) skew(-10deg);
-    }
+.brief-logo small {{
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+}}
 
-    .brief-hero h1 {
-        margin: 0;
-        color: #fff;
-        font-size: clamp(34px, 4.4vw, 54px);
-        line-height: 1.35;
-        font-weight: 800;
-        word-break: keep-all;
-    }
+.brief-menu {{
+    display: flex;
+    gap: 32px;
+}}
 
-    .brief-hero h1 span {
-        color: #a9e4ff;
-    }
+.brief-menu a {{
+    color: #e1e9fa !important;
+    text-decoration: none !important;
+    font-weight: 600;
+}}
 
-    .brief-hero p {
-        margin: 25px auto 0;
-        color: #edf3ff;
-        font-size: clamp(16px, 1.8vw, 21px);
-        line-height: 1.8;
-        word-break: keep-all;
-    }
+.brief-hero {{
+    max-width: 1050px;
+    min-height: 510px;
+    margin: 0 auto;
+    padding: 68px 24px 72px;
+    text-align: center;
+    box-sizing: border-box;
+}}
 
-    .brief-tags {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 9px;
-        margin-top: 48px;
-    }
+.brief-ring {{
+    width: 82px;
+    height: 82px;
+    margin: 0 auto 38px;
+    border: 17px solid transparent;
+    border-radius: 50%;
+    background:
+        linear-gradient(#0b1957, #0b1957) padding-box,
+        linear-gradient(135deg, #a9f8ff, #3185ff) border-box;
+    transform: rotate(-28deg) skew(-10deg);
+}}
 
-    .brief-tags span {
-        padding: 9px 15px;
-        border: 1px solid #d2e0f4;
-        border-radius: 7px;
-        font-size: 14px;
-    }
+.brief-hero h1 {{
+    margin: 0;
+    color: #fff;
+    font-size: clamp(34px, 4.4vw, 54px);
+    line-height: 1.35;
+    font-weight: 800;
+    word-break: keep-all;
+}}
 
-    .brief-start {
-        display: inline-block;
-        margin-top: 22px;
-        padding: 13px 25px;
-        border-radius: 8px;
-        background: #fff;
-        color: #10245d !important;
-        text-decoration: none !important;
-        font-weight: 800;
-    }
+.brief-hero h1 span {{
+    color: #a9e4ff;
+}}
 
-    .brief-section-title {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 43px 24px 18px;
-    }
+.brief-hero p {{
+    margin: 25px auto 0;
+    color: #edf3ff;
+    font-size: clamp(16px, 1.8vw, 21px);
+    line-height: 1.8;
+    word-break: keep-all;
+}}
 
-    .brief-section-title h2 {
-        margin: 0 0 8px;
-        font-size: 27px;
-    }
+.brief-tags {{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 48px;
+}}
 
-    .brief-section-title p {
-        margin: 0;
-        color: #667085;
-    }
+.brief-tags span {{
+    padding: 9px 15px;
+    border: 1px solid #d2e0f4;
+    border-radius: 7px;
+    font-size: 14px;
+}}
 
-    div[data-testid="stIFrame"] {
-        padding: 0 24px;
-    }
+.brief-start {{
+    display: inline-block;
+    margin-top: 22px;
+    padding: 13px 25px;
+    border-radius: 8px;
+    background: #fff;
+    color: #10245d !important;
+    text-decoration: none !important;
+    font-weight: 800;
+}}
 
-    @media (max-width: 640px) {
-        .brief-nav {
-            padding: 20px;
-        }
+.brief-section-title {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 43px 24px 18px;
+}}
 
-        .brief-logo {
-            font-size: 22px;
-        }
+.brief-section-title h2 {{
+    margin: 0 0 8px;
+    font-size: 27px;
+}}
 
-        .brief-menu {
-            gap: 14px;
-        }
+.brief-section-title p {{
+    margin: 0;
+    color: #667085;
+}}
 
-        .brief-menu a {
-            font-size: 13px;
-        }
+div[data-testid="stIFrame"] {{
+    padding: 0 24px;
+}}
 
-        .brief-hero {
-            min-height: 470px;
-            padding: 65px 20px 55px;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+@media (max-width: 640px) {{
+    .brief-nav {{
+        padding: 20px;
+    }}
 
-# HTML 태그를 한 덩어리로 연결합니다.
-# 줄바꿈·들여쓰기 때문에 태그가 코드처럼 보이는 현상을 피하기 위한 부분입니다.
+    .brief-logo {{
+        font-size: 22px;
+    }}
+
+    .brief-menu {{
+        gap: 14px;
+    }}
+
+    .brief-menu a {{
+        font-size: 13px;
+    }}
+
+    .brief-hero {{
+        min-height: 470px;
+        padding: 65px 20px 55px;
+    }}
+}}
+</style>
+"""
+
+st.markdown(page_css, unsafe_allow_html=True)
+
+
+# --------------------------------------------------
+# 4. 홈페이지 상단 영역
+# HTML을 한 덩어리로 만들어 코드가 화면에 노출되지 않게 합니다.
+# --------------------------------------------------
 home_html = (
     '<div class="brief-home" id="home">'
         '<nav class="brief-nav">'
@@ -214,7 +264,9 @@ home_html = (
                 '<span>#뉴스정리</span>'
                 '<span>#보고서작성</span>'
             '</div>'
-            '<a class="brief-start" href="#editor">브리핑 작성 시작 →</a>'
+            '<a class="brief-start" href="#editor">'
+                '브리핑 작성 시작 →'
+            '</a>'
         '</section>'
     '</div>'
     '<div class="brief-section-title" id="editor">'
@@ -225,106 +277,132 @@ home_html = (
 
 st.markdown(home_html, unsafe_allow_html=True)
 
-if not html_path.is_file():
-    st.error(f"양식 파일을 찾을 수 없습니다: {html_path.name}")
+
+# --------------------------------------------------
+# 5. 기존 HTML 작성기 파일 불러오기
+# --------------------------------------------------
+if not HTML_PATH.is_file():
+    st.error(f"양식 파일을 찾을 수 없습니다: {HTML_PATH.name}")
     st.stop()
 
-# 원본 파일을 변경하지 않고 읽습니다.
 try:
-    html_content = html_path.read_text(encoding="utf-8-sig")
+    html_content = HTML_PATH.read_text(encoding="utf-8-sig")
 except UnicodeDecodeError:
-    html_content = html_path.read_text(
+    html_content = HTML_PATH.read_text(
         encoding="cp949",
         errors="replace",
     )
 
-# 작성기 내부에만 적용할 색상입니다.
-# 원본 작성기의 구조와 JavaScript는 변경하지 않습니다.
-editor_style = """
+
+# --------------------------------------------------
+# 6. 작성기 내부에 색상과 KoPub돋움체 적용
+# 원본 HTML 파일 자체는 수정하지 않습니다.
+# --------------------------------------------------
+editor_style = f"""
 <style>
-body {
+{font_face_css}
+
+html,
+body,
+button,
+input,
+textarea,
+select,
+h1,
+h2,
+h3,
+h4,
+p,
+a,
+label,
+th,
+td {{
+    font-family: 'KoPubDotum', sans-serif !important;
+}}
+
+body {{
     background: #eef3fb;
     color: #172b48;
-}
+}}
 
-header.top {
+header.top {{
     background: #0b1957;
     color: #fff;
-}
+}}
 
-header.top p {
+header.top p {{
     color: #d9e5ff;
-}
+}}
 
-.bar {
+.bar {{
     background: #f8faff;
     border-bottom: 1px solid #cbd8ed;
-}
+}}
 
 button,
-label.file {
+label.file {{
     border-color: #b9c9e2;
     color: #153362;
-}
+}}
 
 button:hover,
-label.file:hover {
+label.file:hover {{
     background: #e8f1ff;
-}
+}}
 
-button.primary {
+button.primary {{
     background: #2256a0;
     border-color: #2256a0;
     color: #fff;
-}
+}}
 
-button.primary:hover {
+button.primary:hover {{
     background: #174584;
-}
+}}
 
-aside {
+aside {{
     background: #e5edfa;
-}
+}}
 
-aside nav a {
+aside nav a {{
     color: #193762;
-}
+}}
 
-aside nav a:hover {
+aside nav a:hover {{
     background: #d3e3fb;
-}
+}}
 
-.card {
+.card {{
     background: #fff;
     border-color: #d4e0f1;
-}
+}}
 
-.card h2 {
+.card h2 {{
     color: #112d5e;
-}
+}}
 
 input,
-textarea {
+textarea {{
     border-color: #c3d1e5;
-}
+}}
 
 input:focus,
-textarea:focus {
+textarea:focus {{
     outline: 2px solid #4787db;
     outline-offset: 1px;
-}
+}}
 
-@media print {
-    body {
+@media print {{
+    body {{
         background: #fff;
-    }
-}
+    }}
+}}
 </style>
 """
 
-if "</head>" in html_content.lower():
-    # 대소문자와 관계없이 실제 </head> 위치를 찾아 CSS를 삽입합니다.
-    head_end = html_content.lower().find("</head>")
+head_end = html_content.lower().find("</head>")
+
+if head_end != -1:
     styled_html = (
         html_content[:head_end]
         + editor_style
@@ -333,6 +411,10 @@ if "</head>" in html_content.lower():
 else:
     styled_html = editor_style + html_content
 
+
+# --------------------------------------------------
+# 7. 작성기를 홈페이지에 표시
+# --------------------------------------------------
 components.html(
     styled_html,
     height=1100,
