@@ -7,7 +7,7 @@ st.set_page_config(page_title="조간 브리핑 통합 작성기", layout="wide"
 
 st.title("📰 조간 브리핑 통합 작성기")
 
-# 세션 상태 변수 안전하게 초기화
+# 세션 상태(Session State) 변수 안전하게 초기화 (NameError 및 렌더링 에러 완벽 방지)
 if 'uploaded_file_name' not in st.session_state:
     st.session_state['uploaded_file_name'] = ""
 if 'uploaded_file_content' not in st.session_state:
@@ -36,10 +36,11 @@ if uploaded_file is not None:
     st.success(f"✅ '{uploaded_file.name}' 양식 파일이 정상적으로 로드되었습니다.")
 
 # ---------------------------------------------------------
-# 2. 실시간 데이터 수집 및 Run 버튼
+# 2. 데이터 수집 및 양식 적용 (Run 버튼)
 # ---------------------------------------------------------
 st.subheader("2. 데이터 수집 및 양식 적용")
 
+# 실시간 뉴스 수집 함수 (서버 튕김 방지 requests 방식 적용)
 def fetch_briefing_data():
     news_list = []
     url = "https://www.yna.co.kr/news"
@@ -55,7 +56,7 @@ def fetch_briefing_data():
             for t in titles[:5]:
                 news_list.append(t.get_text(strip=True))
     except Exception as e:
-        st.error(f"데이터 수집 중 네트워크 오류 발생: {e}")
+        st.error(f"데이터 수집 중 오류 발생: {e}")
     
     if not news_list:
         news_list = ["최신 브리핑 데이터를 성공적으로 수집하여 갱신했습니다."]
@@ -70,8 +71,10 @@ if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
             collected_news = fetch_briefing_data()
             base_content = st.session_state['uploaded_file_content']
             
+            # 수집된 뉴스 텍스트 구성
             news_text = "\n".join([f"• {item}" for item in collected_news])
             
+            # 양식 원본 데이터 유지 및 데이터 반영
             result_content = base_content
             if "주요 뉴스 헤드라인" in result_content:
                 result_content = result_content.replace("주요 뉴스 헤드라인", f"주요 뉴스 헤드라인\n{news_text}")
@@ -85,7 +88,7 @@ if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
             st.success("🎉 데이터 수집 및 파일 반영이 완료되었습니다!")
 
 # ---------------------------------------------------------
-# 3. 최종 결과 파일 저장 및 다운로드
+# 3. 최종 결과 파일 저장 및 다운로드 (미리보기 없음)
 # ---------------------------------------------------------
 st.subheader("3. 최종 결과 파일 저장 및 다운로드")
 
