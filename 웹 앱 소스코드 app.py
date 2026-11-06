@@ -127,14 +127,9 @@ page_css = f"""
 :root {{
     --navy: #0d1c59;
     --navy-dark: #081442;
-    --navy-soft: #223d78;
     --sky: #9be7ff;
     --sky-soft: #dff6ff;
-    --paper: #ffffff;
-    --paper-blue: #f3f8ff;
     --line: #b7c9e3;
-    --text: #102653;
-    --muted: #60769b;
 }}
 
 html,
@@ -149,7 +144,7 @@ body,
 
 .stApp {{
     min-height: 100vh;
-    background: var(--navy);
+    background: #0d1c59;
 }}
 
 .block-container {{
@@ -202,6 +197,7 @@ footer {{
 .brief-logo-text small {{
     display: block;
     margin-top: 8px;
+    color: #ffffff;
     font-size: 12px;
     font-weight: 400;
     letter-spacing: 0;
@@ -258,7 +254,7 @@ footer {{
 }}
 
 .brief-hero h1 span {{
-    color: var(--sky);
+    color: #9be7ff;
 }}
 
 .brief-hero p {{
@@ -303,51 +299,33 @@ footer {{
 }}
 
 .st-key-start_briefing button:hover {{
-    background: var(--sky-soft) !important;
+    background: #dff6ff !important;
 }}
 
 /* ==================================================
    작성기 화면
+   빨간색 표시 영역을 없애기 위해 별도 제목 영역을
+   만들지 않고 iframe만 표시합니다.
    ================================================== */
 .st-key-editor_page {{
     box-sizing: border-box;
     min-height: 100vh;
-    color: #ffffff;
     background:
         linear-gradient(
             180deg,
             #0d1c59 0%,
-            #0d1c59 25%,
-            #29477f 58%,
+            #0d1c59 28%,
+            #29477f 62%,
             #7895be 100%
         );
 }}
 
 .st-key-editor_page > div {{
     box-sizing: border-box;
+    width: 100%;
     max-width: 1440px;
     margin: 0 auto;
-    padding: 20px 24px 36px;
-}}
-
-.editor-header {{
-    margin: 0 0 18px;
-    padding: 12px 4px 8px;
-}}
-
-.editor-title {{
-    margin: 0;
-    color: var(--sky);
-    font-size: clamp(26px, 3vw, 40px);
-    font-weight: 800;
-    line-height: 1.3;
-}}
-
-.editor-description {{
-    margin: 8px 0 0;
-    color: #edf4ff;
-    font-size: 15px;
-    line-height: 1.7;
+    padding: 14px 24px 34px;
 }}
 
 .st-key-editor_page div[data-testid="stIFrame"] {{
@@ -358,21 +336,6 @@ footer {{
     background: #ffffff;
 }}
 
-/* 홈으로 버튼 */
-.st-key-back_home button {{
-    min-height: 42px !important;
-    border: 1px solid #ffffff !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    color: var(--navy) !important;
-    font-weight: 800 !important;
-}}
-
-.st-key-back_home button:hover {{
-    background: var(--sky-soft) !important;
-}}
-
-/* 작성기 파일 안내 */
 .editor-file-error {{
     margin: 24px;
     padding: 22px;
@@ -424,11 +387,7 @@ footer {{
     }}
 
     .st-key-editor_page > div {{
-        padding: 14px 10px 24px;
-    }}
-
-    .editor-header {{
-        padding: 6px 2px;
+        padding: 8px 6px 20px;
     }}
 }}
 </style>
@@ -486,35 +445,8 @@ if st.session_state.page == "home":
 # ==================================================
 else:
     with st.container(key="editor_page"):
-        navigation_column, title_column = st.columns(
-            [1.2, 8.8],
-            vertical_alignment="center",
-        )
-
-        with navigation_column:
-            if st.button(
-                "← 홈으로",
-                key="back_home",
-                use_container_width=True,
-            ):
-                st.session_state.page = "home"
-                st.rerun()
-
-        with title_column:
-            st.markdown(
-                """
-                <div class="editor-header">
-                    <h1 class="editor-title">
-                        조간 브리핑 작성
-                    </h1>
-                    <p class="editor-description">
-                        워드클라우드, 주요 기사와 정부 동향을
-                        입력하고 브리핑을 완성하세요.
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        # 요청에 따라 작성기 바깥의 홈 버튼, 제목,
+        # 설명 영역은 출력하지 않습니다.
 
         if HTML_PATH is None:
             candidate_names = "<br>".join(
@@ -557,7 +489,6 @@ else:
         :root {{
             --navy: #0d1c59;
             --navy-dark: #081442;
-            --navy-soft: #223d78;
             --sky: #9be7ff;
             --sky-soft: #dff6ff;
             --paper: #ffffff;
@@ -587,7 +518,7 @@ else:
 
         html {{
             min-height: 100%;
-            background: var(--navy);
+            background: #0d1c59;
         }}
 
         body {{
@@ -597,20 +528,20 @@ else:
             background:
                 linear-gradient(
                     180deg,
-                    var(--navy) 0,
-                    var(--navy) 180px,
+                    #0d1c59 0,
+                    #0d1c59 180px,
                     #29477f 430px,
                     #7895be 100%
                 );
         }}
 
-        /* 작성기 내부 상단 */
+        /* HTML 내부 제목 영역 */
         header.top {{
             box-sizing: border-box;
-            min-height: 150px;
-            padding: 28px 34px !important;
+            min-height: 130px;
+            padding: 26px 32px !important;
             color: #ffffff !important;
-            background: var(--navy) !important;
+            background: #0d1c59 !important;
             border-bottom:
                 1px solid rgba(255, 255, 255, 0.14);
         }}
@@ -619,7 +550,7 @@ else:
         header.top h2,
         header.top h3 {{
             margin-top: 0;
-            color: var(--sky) !important;
+            color: #9be7ff !important;
             font-weight: 800 !important;
         }}
 
@@ -627,13 +558,13 @@ else:
             color: #eef5ff !important;
         }}
 
-        /* 작성기 내부 기능 막대 */
+        /* 상단 기능 막대 */
         .bar {{
             position: sticky;
             top: 0;
             z-index: 50;
             padding: 12px 18px !important;
-            background: rgba(13, 28, 89, 0.97) !important;
+            background: #0d1c59 !important;
             border-top:
                 1px solid rgba(255, 255, 255, 0.12);
             border-bottom:
@@ -644,28 +575,85 @@ else:
         .bar label.file {{
             background: #ffffff !important;
             border: 1px solid #ffffff !important;
-            color: var(--navy) !important;
+            color: #0d1c59 !important;
             font-weight: 800 !important;
         }}
 
         .bar button:hover,
         .bar label.file:hover {{
-            background: var(--sky-soft) !important;
-            border-color: var(--sky) !important;
+            background: #dff6ff !important;
+            border-color: #9be7ff !important;
         }}
 
-        /* 왼쪽 입력 영역 */
+        /* ==========================================
+           검은색 표시 영역: 왼쪽 사이드 메뉴
+           배경을 전체 배경과 같은 남색으로 변경
+           ========================================== */
         aside {{
-            background:
-                rgba(235, 243, 255, 0.96) !important;
+            background: #0d1c59 !important;
+            color: #ffffff !important;
             border-right:
-                1px solid var(--line) !important;
+                1px solid rgba(255, 255, 255, 0.22) !important;
         }}
 
+        aside *,
+        aside p,
+        aside span,
+        aside div,
+        aside small,
+        aside label,
+        aside li,
+        aside strong,
+        aside b {{
+            color: #ffffff !important;
+        }}
+
+        aside h1,
         aside h2,
         aside h3,
         aside h4 {{
-            color: var(--navy) !important;
+            color: #9be7ff !important;
+        }}
+
+        aside a {{
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }}
+
+        aside a:hover {{
+            color: #9be7ff !important;
+        }}
+
+        aside button {{
+            background: transparent !important;
+            color: #ffffff !important;
+            border-color:
+                rgba(255, 255, 255, 0.30) !important;
+        }}
+
+        aside button:hover {{
+            background:
+                rgba(255, 255, 255, 0.12) !important;
+            color: #9be7ff !important;
+            border-color: #9be7ff !important;
+        }}
+
+        aside .active,
+        aside [aria-current="page"],
+        aside button.active,
+        aside a.active {{
+            background:
+                rgba(155, 231, 255, 0.16) !important;
+            color: #9be7ff !important;
+            border-left:
+                3px solid #9be7ff !important;
+        }}
+
+        aside .active *,
+        aside [aria-current="page"] *,
+        aside button.active *,
+        aside a.active * {{
+            color: #9be7ff !important;
         }}
 
         /* 카드 */
@@ -673,7 +661,7 @@ else:
             background:
                 rgba(255, 255, 255, 0.98) !important;
             border:
-                1px solid var(--line) !important;
+                1px solid #b7c9e3 !important;
             border-radius: 10px !important;
             box-shadow: none !important;
         }}
@@ -681,7 +669,7 @@ else:
         .card h2,
         .card h3,
         .card h4 {{
-            color: var(--navy) !important;
+            color: #0d1c59 !important;
         }}
 
         /* 입력 요소 */
@@ -690,7 +678,7 @@ else:
         select {{
             box-sizing: border-box;
             background: #ffffff !important;
-            color: var(--text) !important;
+            color: #102653 !important;
             border:
                 1px solid #aabedc !important;
             border-radius: 7px !important;
@@ -716,21 +704,21 @@ else:
                 1px solid #9eb5d5 !important;
             border-radius: 7px !important;
             background: #f5f9ff !important;
-            color: var(--navy) !important;
+            color: #0d1c59 !important;
             font-weight: 700 !important;
             box-shadow: none !important;
         }}
 
         button:hover,
         label.file:hover {{
-            background: var(--sky-soft) !important;
+            background: #dff6ff !important;
             border-color: #5da9df !important;
         }}
 
         /* 주요 버튼 */
         button.primary {{
-            background: var(--navy) !important;
-            border-color: var(--navy) !important;
+            background: #0d1c59 !important;
+            border-color: #0d1c59 !important;
             color: #ffffff !important;
         }}
 
@@ -744,7 +732,7 @@ else:
         .preview,
         .paper,
         .page {{
-            color: var(--text);
+            color: #102653;
         }}
 
         .paper,
@@ -756,34 +744,45 @@ else:
 
         /* 표 */
         table {{
-            border-color: var(--line) !important;
+            border-color: #b7c9e3 !important;
         }}
 
         th {{
             background: #e8f1ff !important;
-            color: var(--navy) !important;
+            color: #0d1c59 !important;
         }}
 
         td {{
             background: #ffffff;
-            color: var(--text);
+            color: #102653;
         }}
 
-        /* 보조 문구 */
-        small,
+        /* 카드 내부 보조 문구에만 회색 적용 */
+        main small,
+        .card small,
         .help,
         .hint,
         .muted {{
-            color: var(--muted) !important;
+            color: #60769b !important;
         }}
 
-        /* 링크 */
-        a {{
+        /* 사이드 메뉴의 보조 문구는 다시 흰색 */
+        aside small,
+        aside .help,
+        aside .hint,
+        aside .muted {{
+            color: #ffffff !important;
+        }}
+
+        /* 일반 링크 */
+        main a,
+        .card a {{
             color: #2267af !important;
         }}
 
-        a:hover {{
-            color: var(--navy) !important;
+        main a:hover,
+        .card a:hover {{
+            color: #0d1c59 !important;
         }}
 
         /* 스크롤바 */
@@ -822,8 +821,8 @@ else:
 
         @media (max-width: 760px) {{
             header.top {{
-                min-height: 120px;
-                padding: 22px 18px !important;
+                min-height: 110px;
+                padding: 20px 16px !important;
             }}
 
             .bar {{
@@ -834,7 +833,12 @@ else:
             aside {{
                 border-right: 0 !important;
                 border-bottom:
-                    1px solid var(--line) !important;
+                    1px solid rgba(
+                        255,
+                        255,
+                        255,
+                        0.22
+                    ) !important;
             }}
         }}
         </style>
