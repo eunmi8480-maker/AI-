@@ -98,3 +98,13 @@ with col_btn2:
         file_name=f"조간브리핑_{briefing_date}.json",
         mime="application/json"
     )
+import streamlit as st
+
+# 한글 파일 다운로드 버튼 예시
+with open("result_briefing.hwp", "rb") as file:
+    st.download_button(
+        label="📄 완성된 한글파일(.hwp) 다운로드",
+        data=file,
+        file_name="조간브리핑_최종.hwp",
+        mime="application/x-hwp"
+    )
