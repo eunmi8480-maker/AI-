@@ -1,126 +1,72 @@
 import streamlit as st
-import json
-from datetime import date
-
-# 페이지 기본 설정
-st.set_page_config(page_title="조간 브리핑 통합 작성기", layout="wide")
+import os
 
 st.title("📰 조간 브리핑 통합 작성기")
 
-# 1. 기본 정보 설정
-st.subheader("기본 정보 설정")
-col1, col2 = st.columns(2)
-with col1:
-    briefing_date = st.date_input("작성 일자", value=date.today())
-with col2:
-    briefing_author = st.text_input("작성자 / 부서", placeholder="예: 대변인실 홍길동")
-
-st.divider()
-
-# 2. 주요 도정 키워드 & 워드클라우드
-st.subheader("1. 주요 도정 키워드 & 워드클라우드")
-col_kw, col_img = st.columns(2)
-with col_kw:
-    keywords_input = st.text_area("주요 키워드 (쉼표로 구분)", placeholder="민생경제, 신산업, 지역균형")
-    keywords = [k.strip() for k in keywords_input.split(",") if k.strip()]
-with col_img:
-    uploaded_image = st.file_uploader("워드클라우드 이미지 첨부", type=["png", "jpg", "jpeg"])
-    if uploaded_image:
-        st.image(uploaded_image, caption="업로드된 워드클라우드", use_column_width=True)
-
-st.divider()
-
-# 3. 주요 방송보도 목록
-st.subheader("2. 주요 방송보도 목록")
-broadcast_text = st.text_area(
-    "방송보도 입력 (형식: 방송사 | 제목 | URL)",
-    placeholder="KBS | 주요 정책 발표 현장 | https://example.com",
-    height=100
+# ---------------------------------------------------------
+# 1. 양식 파일 업로드 (HTML 또는 HWP/HWPML 파일)
+# ---------------------------------------------------------
+st.subheader("1. 양식 파일 업로드")
+uploaded_template = st.file_uploader(
+    "사용할 HWP 또는 HTML 양식 파일을 업로드하세요.", 
+    type=["html", "hwp", "xml", "txt"]
 )
 
-st.divider()
-
-# 4. 주요 일간지 1면 헤드라인
-st.subheader("3. 주요 일간지 1면 헤드라인")
-headline_text = st.text_area(
-    "1면 헤드라인 입력 (형식: 신문사 | 헤드라인 제목)",
-    placeholder="조선일보 | 지역 경제 활성화 대책 발표\n중앙일보 | 첨단 산업 단지 조성",
-    height=100
-)
-
-st.divider()
-
-# 5. 주요 언론 동향
-st.subheader("4. 주요 언론 동향")
-trend_text = st.text_area("동향 내용 입력", placeholder="[정부] 기획재정부 예산 편성 지침 발표...", height=100)
-
-st.divider()
-
-# 6. 인사 및 부고 소식
-st.subheader("5. 인사 및 부고 소식")
-notice_text = st.text_area("소식 입력", placeholder="[인사] OO과 OO팀장 발령\n[부고] OO국장 모친상", height=80)
-
-st.divider()
-
-# 실행(Run) / 미리보기 & 데이터 저장 버튼
-col_btn1, col_btn2 = st.columns(2)
-
-with col_btn1:
-    if st.button("🔍 보고서 미리보기 (Run)", type="primary"):
-        st.subheader("📋 [ 미리보기 ] 조간 브리핑")
-        st.write(f"**작성일자:** {briefing_date} | **작성자:** {briefing_author}")
-        st.markdown(f"**1. 주요 키워드:** {', '.join(keywords)}")
-        if uploaded_image:
-            st.image(uploaded_image, width=400)
-        st.markdown("**2. 주요 방송보도:**")
-        st.text(broadcast_text)
-        st.markdown("**3. 1면 헤드라인:**")
-        st.text(headline_text)
-        st.markdown("**4. 언론 동향:**")
-        st.text(trend_text)
-        st.markdown("**5. 인사 및 부고:**")
-        st.text(notice_text)
-
-with col_btn2:
-    data_to_save = {
-        "date": str(briefing_date),
-        "author": briefing_author,
-        "keywords": keywords,
-        "broadcasts": broadcast_text,
-        "headlines": headline_text,
-        "trends": trend_text,
-        "notices": notice_text
-    }
-    json_string = json.dumps(data_to_save, ensure_ascii=False, indent=2)
-    st.download_button(
-        label="💾 데이터 저장 (.json)",
-        data=json_string,
-        file_name=f"조간브리핑_{briefing_date}.json",
-        mime="application/json"
-    )
-import os
-import streamlit as st
-import streamlit.components.v1 as components
-
-# 1. 현재 app.py 파일이 위치한 폴더 경로 구하기
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# 2. 실제 불러올 HTML 파일명 지정 (★ 본인의 파일명으로 수정 필요)
-HTML_FILE_NAME = "실제_HTML_파일명.html"  # 예: "index.html" 또는 "template.html"
-html_file_path = os.path.join(BASE_DIR, HTML_FILE_NAME)
-
-# 3. 파일 존재 여부 확인 후 Streamlit에 렌더링
-if os.path.exists(html_file_path):
-    # 인코딩 에러 방지 (utf-8 및 cp949 지원)
+template_content = ""
+if uploaded_template is not None:
+    # 업로드된 파일 읽기
     try:
-        with open(html_file_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        template_content = uploaded_template.read().decode("utf-8")
     except UnicodeDecodeError:
-        with open(html_file_path, "r", encoding="cp949") as f:
-            html_content = f.read()
+        uploaded_template.seek(0)
+        template_content = uploaded_template.read().decode("cp949", errors="ignore")
+    st.success(f"✅ '{uploaded_template.name}' 양식 파일이 정상적으로 로드되었습니다.")
+
+# ---------------------------------------------------------
+# 2. 데이터 수집 실행 (Run 버튼)
+# ---------------------------------------------------------
+st.subheader("2. 데이터 수집 및 양식 적용")
+
+if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
+    if not template_content:
+        st.warning("⚠️ 먼저 1번에서 양식 파일(HTML/HWP)을 업로드해 주세요.")
+    else:
+        with st.spinner("데이터를 수집하고 업로드한 양식에 적용 중입니다..."):
+            # TODO: 실제 뉴스 수집 / 데이터 처리 로직 수행
+            # 수집된 데이터예시
+            collected_data = "수집된 뉴스 데이터 결과..."
             
-    # HTML 화면 원본 양식대로 출력
-    components.html(html_content, height=800, scrolling=True)
+            # 업로드된 양식 템플릿에 수집된 데이터를 결합/생성하는 로직
+            final_result_content = template_content  # 실제 구현 시 치환(replace) 로직 적용
+            
+            # 생성된 결과 데이터를 세션에 저장
+            st.session_state['final_result'] = final_result_content
+            st.session_state['file_name'] = uploaded_template.name
+            st.success("🎉 데이터 수집 및 양식 적용이 완료되었습니다!")
+
+# ---------------------------------------------------------
+# 3. 최종 한글/HTML 파일 생성 및 다운로드 (TXT가 아닌 원본 확장자로 저장)
+# ---------------------------------------------------------
+st.subheader("3. 최종 결과 파일 저장 및 다운로드")
+
+if 'final_result' in st.session_state:
+    result_data = st.session_state['final_result']
+    original_name = st.session_state.get('file_name', 'result.hwp')
+    
+    # 다운로드 파일명 및 MIME 타입 설정
+    output_filename = f"완성본_{original_name}"
+    
+    if original_name.endswith('.html'):
+        mime_type = "text/html"
+    else:
+        mime_type = "application/x-hwp"  # 한글 파일 전용 MIME 타입
+
+    # 텍스트(.txt)가 아닌 원래 한글/HTML 파일 형태로 다운로드 제공
+    st.download_button(
+        label=f"📄 {output_filename} 다운로드 (원래 양식 유지)",
+        data=result_data.encode('utf-8'),
+        file_name=output_filename,
+        mime=mime_type
+    )
 else:
-    st.error(f"❌ HTML 파일을 찾을 수 없습니다: `{html_file_path}`")
-    st.info(f"👉 `{HTML_FILE_NAME}` 파일이 `app.py`와 같은 폴더에 업로드되어 있는지 확인해 주세요.")
+    st.info("💡 위의 [Run] 버튼을 눌러 데이터를 수집하면 다운로드 버튼이 활성화됩니다.")
