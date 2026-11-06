@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>조간 브리핑 통합 작성기</title>
-    <!-- JSZip 라이브러리 (HWPX 압축 및 생성용) -->
+    <!-- JSZip 라이브러리 (HWPX 파일 생성용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -29,7 +29,6 @@
             padding-bottom: 50px;
         }
 
-        /* Top Fixed Navigation */
         header {
             position: sticky;
             top: 0;
@@ -70,9 +69,16 @@
         .btn-info { background-color: #36b9cc; color: #fff; }
         .btn-info:hover { background-color: #2c9faf; }
 
-        /* Container & Cards */
         .container {
             max-width: 1200px;
             margin: 30px auto;
             padding: 0 20px;
         }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 5
