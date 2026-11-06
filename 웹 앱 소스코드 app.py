@@ -36,17 +36,26 @@ if "page" not in st.session_state:
 
 
 # ==================================================
-# 2. 공통 함수
+# 2. 화면 이동 함수
+# ==================================================
+def go_home():
+    st.session_state.page = "home"
+
+
+def go_editor():
+    st.session_state.page = "editor"
+
+
+# ==================================================
+# 3. 공통 함수
 # ==================================================
 def file_to_base64(file_path: Path) -> str:
-    """파일을 Base64 문자열로 변환합니다."""
     return base64.b64encode(
         file_path.read_bytes()
     ).decode("ascii")
 
 
 def read_text_file(file_path: Path) -> str:
-    """UTF-8로 읽고 실패하면 CP949로 읽습니다."""
     try:
         return file_path.read_text(
             encoding="utf-8-sig",
@@ -59,7 +68,7 @@ def read_text_file(file_path: Path) -> str:
 
 
 # ==================================================
-# 3. KoPub돋움체 불러오기
+# 4. KoPub돋움체 불러오기
 # ==================================================
 FONT_CANDIDATES = [
     (
@@ -95,7 +104,7 @@ for font_path, mime_type, font_format in FONT_CANDIDATES:
 
 
 # ==================================================
-# 4. 홈페이지 로고
+# 5. 홈페이지 로고
 # ==================================================
 if LOGO_PATH.is_file():
     encoded_logo = file_to_base64(LOGO_PATH)
@@ -118,7 +127,7 @@ else:
 
 
 # ==================================================
-# 5. Streamlit 전체 화면 CSS
+# 6. Streamlit 전체 CSS
 # ==================================================
 page_css = f"""
 <style>
@@ -160,9 +169,7 @@ footer {{
     display: none;
 }}
 
-/* ==================================================
-   첫 화면
-   ================================================== */
+/* 홈 화면 */
 .st-key-landing {{
     min-height: 100vh;
     color: #ffffff;
@@ -179,7 +186,7 @@ footer {{
 .brief-nav {{
     max-width: 1180px;
     margin: 0 auto;
-    padding: 25px 32px;
+    padding: 25px 32px 0;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -190,7 +197,6 @@ footer {{
     color: #ffffff;
     font-size: 28px;
     font-weight: 800;
-    letter-spacing: -1px;
     line-height: 1.1;
 }}
 
@@ -200,7 +206,6 @@ footer {{
     color: #ffffff;
     font-size: 12px;
     font-weight: 400;
-    letter-spacing: 0;
 }}
 
 .brief-logo-image {{
@@ -213,15 +218,6 @@ footer {{
     width: 100%;
     height: auto;
     object-fit: contain;
-}}
-
-.brief-menu {{
-    display: flex;
-    gap: 32px;
-    padding-top: 9px;
-    color: #e2e9fb;
-    font-size: 15px;
-    font-weight: 600;
 }}
 
 .brief-hero {{
@@ -250,7 +246,6 @@ footer {{
     font-size: clamp(34px, 4.5vw, 54px);
     font-weight: 800;
     line-height: 1.35;
-    word-break: keep-all;
 }}
 
 .brief-hero h1 span {{
@@ -262,7 +257,36 @@ footer {{
     color: #f0f4ff;
     font-size: clamp(16px, 1.8vw, 20px);
     line-height: 1.8;
-    word-break: keep-all;
+}}
+
+/* 홈 화면 상단 메뉴 */
+.st-key-home_navigation {{
+    position: absolute;
+    top: 21px;
+    right: max(32px, calc((100vw - 1180px) / 2 + 32px));
+    z-index: 10;
+    display: flex;
+    gap: 12px;
+}}
+
+.st-key-home_navigation div[data-testid="stHorizontalBlock"] {{
+    gap: 12px;
+}}
+
+.st-key-nav_home button,
+.st-key-nav_editor button {{
+    min-height: 38px !important;
+    padding: 4px 14px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+}}
+
+.st-key-nav_home button:hover,
+.st-key-nav_editor button:hover {{
+    color: #9be7ff !important;
 }}
 
 /* 시작 버튼 */
@@ -274,39 +298,27 @@ footer {{
 .st-key-start_briefing button {{
     width: 100% !important;
     min-height: 66px !important;
-    padding: 6px 8px !important;
     border: 0 !important;
     border-radius: 10px !important;
     background: #ffffff !important;
     color: #11245b !important;
-    font-family: "KoPubDotum", sans-serif !important;
     font-size: 36px !important;
     font-weight: 800 !important;
-    line-height: 1.1 !important;
-    white-space: nowrap !important;
 }}
 
 .st-key-start_briefing button p,
 .st-key-start_briefing button span {{
     margin: 0 !important;
-    padding: 0 !important;
     color: #11245b !important;
-    font-family: "KoPubDotum", sans-serif !important;
     font-size: 36px !important;
     font-weight: 800 !important;
-    line-height: 1.1 !important;
-    white-space: nowrap !important;
 }}
 
 .st-key-start_briefing button:hover {{
     background: #dff6ff !important;
 }}
 
-/* ==================================================
-   작성기 화면
-   빨간색 표시 영역을 없애기 위해 별도 제목 영역을
-   만들지 않고 iframe만 표시합니다.
-   ================================================== */
+/* 작성기 화면 */
 .st-key-editor_page {{
     box-sizing: border-box;
     min-height: 100vh;
@@ -321,18 +333,50 @@ footer {{
 }}
 
 .st-key-editor_page > div {{
-    box-sizing: border-box;
     width: 100%;
     max-width: 1440px;
     margin: 0 auto;
-    padding: 14px 24px 34px;
+    padding: 0 24px 34px;
+    box-sizing: border-box;
+}}
+
+/* 작성기 최상단 홈 버튼 줄 */
+.st-key-editor_topbar {{
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 0;
+    background: #0d1c59;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}}
+
+.st-key-editor_home button {{
+    width: 140px !important;
+    min-height: 44px !important;
+    border: 1px solid #ffffff !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #0d1c59 !important;
+    font-weight: 800 !important;
+}}
+
+.st-key-editor_home button p,
+.st-key-editor_home button span {{
+    color: #0d1c59 !important;
+    font-weight: 800 !important;
+}}
+
+.st-key-editor_home button:hover {{
+    background: #dff6ff !important;
 }}
 
 .st-key-editor_page div[data-testid="stIFrame"] {{
     width: 100%;
     overflow: hidden;
     border: 1px solid #6f8fbd;
-    border-radius: 12px;
+    border-radius: 0 0 12px 12px;
     background: #ffffff;
 }}
 
@@ -348,26 +392,26 @@ footer {{
 
 @media (max-width: 640px) {{
     .brief-nav {{
-        padding: 22px 20px;
-        gap: 12px;
-    }}
-
-    .brief-logo-text {{
-        font-size: 22px;
+        padding: 22px 20px 0;
     }}
 
     .brief-logo-image {{
-        width: min(270px, 62vw);
+        width: min(250px, 58vw);
     }}
 
-    .brief-menu {{
-        gap: 14px;
-        padding-top: 5px;
-        font-size: 13px;
+    .st-key-home_navigation {{
+        top: 16px;
+        right: 14px;
+    }}
+
+    .st-key-nav_home button,
+    .st-key-nav_editor button {{
+        padding: 4px 6px !important;
+        font-size: 13px !important;
     }}
 
     .brief-hero {{
-        padding-top: 70px;
+        padding-top: 75px;
     }}
 
     .brief-ring {{
@@ -376,77 +420,85 @@ footer {{
         border-width: 13px;
     }}
 
-    .st-key-start_briefing {{
-        width: min(280px, calc(100% - 40px));
-    }}
-
-    .st-key-start_briefing button,
-    .st-key-start_briefing button p,
-    .st-key-start_briefing button span {{
-        font-size: 29px !important;
-    }}
-
     .st-key-editor_page > div {{
-        padding: 8px 6px 20px;
+        padding: 0 6px 20px;
+    }}
+
+    .st-key-editor_home button {{
+        width: 120px !important;
     }}
 }}
 </style>
 """
 
-st.markdown(
-    page_css,
-    unsafe_allow_html=True,
-)
+st.markdown(page_css, unsafe_allow_html=True)
 
 
 # ==================================================
-# 6. 첫 화면
+# 7. 홈 화면
 # ==================================================
 if st.session_state.page == "home":
     with st.container(key="landing"):
-        landing_html = (
-            '<div class="brief-nav">'
-            f'{logo_html}'
-            '<div class="brief-menu">'
-            '<span>홈</span>'
-            '<span>브리핑 작성</span>'
-            '</div>'
-            '</div>'
-            '<div class="brief-hero">'
-            '<div class="brief-ring"></div>'
-            '<h1>'
-            '<span>오늘의 뉴스,</span><br>'
-            '한눈에 정리하세요.'
-            '</h1>'
-            '<p>'
-            '워드클라우드부터 주요 기사와 정부 동향까지.<br>'
-            '필요한 내용을 입력하고 조간 브리핑을 '
-            '완성해 보세요.'
-            '</p>'
-            '</div>'
-        )
-
         st.markdown(
-            landing_html,
+            (
+                '<div class="brief-nav">'
+                f'{logo_html}'
+                '</div>'
+                '<div class="brief-hero">'
+                '<div class="brief-ring"></div>'
+                '<h1>'
+                '<span>오늘의 뉴스,</span><br>'
+                '한눈에 정리하세요.'
+                '</h1>'
+                '<p>'
+                '워드클라우드부터 주요 기사와 정부 동향까지.<br>'
+                '필요한 내용을 입력하고 조간 브리핑을 '
+                '완성해 보세요.'
+                '</p>'
+                '</div>'
+            ),
             unsafe_allow_html=True,
         )
 
-        if st.button(
+        with st.container(key="home_navigation"):
+            nav_home_col, nav_editor_col = st.columns(2)
+
+            with nav_home_col:
+                st.button(
+                    "홈",
+                    key="nav_home",
+                    on_click=go_home,
+                    use_container_width=True,
+                )
+
+            with nav_editor_col:
+                st.button(
+                    "브리핑 작성",
+                    key="nav_editor",
+                    on_click=go_editor,
+                    use_container_width=True,
+                )
+
+        st.button(
             "브리핑 작성 시작",
             key="start_briefing",
+            on_click=go_editor,
             use_container_width=True,
-        ):
-            st.session_state.page = "editor"
-            st.rerun()
+        )
 
 
 # ==================================================
-# 7. 작성기 화면
+# 8. 작성기 화면
 # ==================================================
 else:
     with st.container(key="editor_page"):
-        # 요청에 따라 작성기 바깥의 홈 버튼, 제목,
-        # 설명 영역은 출력하지 않습니다.
+        # 최상단 홈 버튼
+        with st.container(key="editor_topbar"):
+            st.button(
+                "← 홈으로",
+                key="editor_home",
+                on_click=go_home,
+            )
 
         if HTML_PATH is None:
             candidate_names = "<br>".join(
@@ -459,28 +511,24 @@ else:
                     '<div class="editor-file-error">'
                     '<strong>작성기 HTML 파일을 찾을 수 '
                     '없습니다.</strong><br><br>'
-                    'GitHub에서 app.py와 같은 폴더에 '
-                    '다음 파일 중 하나를 올려 주세요.'
-                    '<br><br>'
+                    'app.py와 같은 폴더에 다음 파일 중 '
+                    '하나를 올려 주세요.<br><br>'
                     f'{candidate_names}'
                     '</div>'
                 ),
                 unsafe_allow_html=True,
             )
-
             st.stop()
 
         try:
             html_content = read_text_file(HTML_PATH)
         except OSError as error:
-            st.error(
-                "작성기 HTML 파일을 읽을 수 없습니다."
-            )
+            st.error("작성기 HTML 파일을 읽을 수 없습니다.")
             st.code(str(error))
             st.stop()
 
         # ==================================================
-        # 작성기 iframe 내부 테마
+        # 작성기 iframe 내부 스타일
         # ==================================================
         editor_css = f"""
         <style>
@@ -488,11 +536,8 @@ else:
 
         :root {{
             --navy: #0d1c59;
-            --navy-dark: #081442;
             --sky: #9be7ff;
             --sky-soft: #dff6ff;
-            --paper: #ffffff;
-            --paper-blue: #f3f8ff;
             --line: #b7c9e3;
             --text: #102653;
             --muted: #60769b;
@@ -535,7 +580,6 @@ else:
                 );
         }}
 
-        /* HTML 내부 제목 영역 */
         header.top {{
             box-sizing: border-box;
             min-height: 130px;
@@ -558,15 +602,12 @@ else:
             color: #eef5ff !important;
         }}
 
-        /* 상단 기능 막대 */
         .bar {{
             position: sticky;
             top: 0;
             z-index: 50;
             padding: 12px 18px !important;
             background: #0d1c59 !important;
-            border-top:
-                1px solid rgba(255, 255, 255, 0.12);
             border-bottom:
                 1px solid #426196 !important;
         }}
@@ -579,16 +620,6 @@ else:
             font-weight: 800 !important;
         }}
 
-        .bar button:hover,
-        .bar label.file:hover {{
-            background: #dff6ff !important;
-            border-color: #9be7ff !important;
-        }}
-
-        /* ==========================================
-           검은색 표시 영역: 왼쪽 사이드 메뉴
-           배경을 전체 배경과 같은 남색으로 변경
-           ========================================== */
         aside {{
             background: #0d1c59 !important;
             color: #ffffff !important;
@@ -603,16 +634,8 @@ else:
         aside small,
         aside label,
         aside li,
-        aside strong,
-        aside b {{
+        aside strong {{
             color: #ffffff !important;
-        }}
-
-        aside h1,
-        aside h2,
-        aside h3,
-        aside h4 {{
-            color: #9be7ff !important;
         }}
 
         aside a {{
@@ -624,23 +647,8 @@ else:
             color: #9be7ff !important;
         }}
 
-        aside button {{
-            background: transparent !important;
-            color: #ffffff !important;
-            border-color:
-                rgba(255, 255, 255, 0.30) !important;
-        }}
-
-        aside button:hover {{
-            background:
-                rgba(255, 255, 255, 0.12) !important;
-            color: #9be7ff !important;
-            border-color: #9be7ff !important;
-        }}
-
         aside .active,
         aside [aria-current="page"],
-        aside button.active,
         aside a.active {{
             background:
                 rgba(155, 231, 255, 0.16) !important;
@@ -649,59 +657,26 @@ else:
                 3px solid #9be7ff !important;
         }}
 
-        aside .active *,
-        aside [aria-current="page"] *,
-        aside button.active *,
-        aside a.active * {{
-            color: #9be7ff !important;
-        }}
-
-        /* 카드 */
         .card {{
-            background:
-                rgba(255, 255, 255, 0.98) !important;
-            border:
-                1px solid #b7c9e3 !important;
+            background: #ffffff !important;
+            border: 1px solid #b7c9e3 !important;
             border-radius: 10px !important;
             box-shadow: none !important;
         }}
 
-        .card h2,
-        .card h3,
-        .card h4 {{
-            color: #0d1c59 !important;
-        }}
-
-        /* 입력 요소 */
         input,
         textarea,
         select {{
             box-sizing: border-box;
             background: #ffffff !important;
             color: #102653 !important;
-            border:
-                1px solid #aabedc !important;
+            border: 1px solid #aabedc !important;
             border-radius: 7px !important;
         }}
 
-        input:focus,
-        textarea:focus,
-        select:focus {{
-            outline:
-                3px solid rgba(79, 181, 255, 0.22) !important;
-            border-color: #438bd2 !important;
-        }}
-
-        input::placeholder,
-        textarea::placeholder {{
-            color: #8191aa !important;
-        }}
-
-        /* 일반 버튼 */
         button,
         label.file {{
-            border:
-                1px solid #9eb5d5 !important;
+            border: 1px solid #9eb5d5 !important;
             border-radius: 7px !important;
             background: #f5f9ff !important;
             color: #0d1c59 !important;
@@ -715,24 +690,10 @@ else:
             border-color: #5da9df !important;
         }}
 
-        /* 주요 버튼 */
         button.primary {{
             background: #0d1c59 !important;
             border-color: #0d1c59 !important;
             color: #ffffff !important;
-        }}
-
-        button.primary:hover {{
-            background: #183477 !important;
-            border-color: #183477 !important;
-        }}
-
-        /* 문서 미리보기 */
-        main,
-        .preview,
-        .paper,
-        .page {{
-            color: #102653;
         }}
 
         .paper,
@@ -740,11 +701,6 @@ else:
             background: #ffffff !important;
             border-color: #c1cee1 !important;
             box-shadow: none !important;
-        }}
-
-        /* 표 */
-        table {{
-            border-color: #b7c9e3 !important;
         }}
 
         th {{
@@ -757,48 +713,11 @@ else:
             color: #102653;
         }}
 
-        /* 카드 내부 보조 문구에만 회색 적용 */
-        main small,
-        .card small,
-        .help,
-        .hint,
-        .muted {{
-            color: #60769b !important;
-        }}
-
-        /* 사이드 메뉴의 보조 문구는 다시 흰색 */
         aside small,
         aside .help,
         aside .hint,
         aside .muted {{
             color: #ffffff !important;
-        }}
-
-        /* 일반 링크 */
-        main a,
-        .card a {{
-            color: #2267af !important;
-        }}
-
-        main a:hover,
-        .card a:hover {{
-            color: #0d1c59 !important;
-        }}
-
-        /* 스크롤바 */
-        ::-webkit-scrollbar {{
-            width: 10px;
-            height: 10px;
-        }}
-
-        ::-webkit-scrollbar-track {{
-            background: #dce7f6;
-        }}
-
-        ::-webkit-scrollbar-thumb {{
-            background: #7895be;
-            border: 2px solid #dce7f6;
-            border-radius: 8px;
         }}
 
         @media print {{
@@ -812,22 +731,11 @@ else:
             aside {{
                 display: none !important;
             }}
-
-            .paper,
-            .page {{
-                border: 0 !important;
-            }}
         }}
 
         @media (max-width: 760px) {{
-            header.top {{
-                min-height: 110px;
-                padding: 20px 16px !important;
-            }}
-
             .bar {{
                 position: static;
-                padding: 10px !important;
             }}
 
             aside {{
