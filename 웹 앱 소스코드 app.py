@@ -7,7 +7,7 @@ st.set_page_config(
     layout="wide",
 )
 
-html_path = Path(__file__).parent / "완성본_조간브리핑_통합작성기.html"
+html_path = Path(__file__).parent / "조간브리핑_통합작성기.html"
 
 if not html_path.exists():
     st.error(f"양식 파일을 찾을 수 없습니다: {html_path.name}")
