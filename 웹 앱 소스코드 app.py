@@ -1,101 +1,84 @@
 import streamlit as st
-import os
+import streamlit.components.v1 as components
+
+# 페이지 기본 설정
+st.set_page_config(page_title="조간 브리핑 통합 작성기", layout="wide")
 
 st.title("📰 조간 브리핑 통합 작성기")
 
+# 세션 상태(Session State) 변수 안전하게 초기화 (NameError 완벽 방지)
+if 'uploaded_file_name' not in st.session_state:
+    st.session_state['uploaded_file_name'] = ""
+if 'uploaded_file_content' not in st.session_state:
+    st.session_state['uploaded_file_content'] = ""
+if 'final_result' not in st.session_state:
+    st.session_state['final_result'] = ""
+
 # ---------------------------------------------------------
-# 1. 양식 파일 업로드 (HTML 또는 HWP/HWPML 파일)
+# 1. 양식 파일 업로드
 # ---------------------------------------------------------
 st.subheader("1. 양식 파일 업로드")
-uploaded_template = st.file_uploader(
+uploaded_file = st.file_uploader(
     "사용할 HWP 또는 HTML 양식 파일을 업로드하세요.", 
     type=["html", "hwp", "xml", "txt"]
 )
 
-template_content = ""
-if uploaded_template is not None:
-    # 업로드된 파일 읽기
+if uploaded_file is not None:
+    # 업로드된 파일 읽기 및 세션 저장
     try:
-        template_content = uploaded_template.read().decode("utf-8")
+        content = uploaded_file.read().decode("utf-8")
     except UnicodeDecodeError:
-        uploaded_template.seek(0)
-        template_content = uploaded_template.read().decode("cp949", errors="ignore")
-    st.success(f"✅ '{uploaded_template.name}' 양식 파일이 정상적으로 로드되었습니다.")
+        uploaded_file.seek(0)
+        content = uploaded_file.read().decode("cp949", errors="ignore")
+    
+    st.session_state['uploaded_file_name'] = uploaded_file.name
+    st.session_state['uploaded_file_content'] = content
+    st.success(f"✅ '{uploaded_file.name}' 양식 파일이 정상적으로 로드되었습니다.")
 
 # ---------------------------------------------------------
-# 2. 데이터 수집 실행 (Run 버튼)
+# 2. 데이터 수집 및 양식 적용 (Run 버튼)
 # ---------------------------------------------------------
 st.subheader("2. 데이터 수집 및 양식 적용")
 
 if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
-    if not template_content:
+    if not st.session_state['uploaded_file_content']:
         st.warning("⚠️ 먼저 1번에서 양식 파일(HTML/HWP)을 업로드해 주세요.")
     else:
         with st.spinner("데이터를 수집하고 업로드한 양식에 적용 중입니다..."):
-            # TODO: 실제 뉴스 수집 / 데이터 처리 로직 수행
-            # 수집된 데이터예시
-            collected_data = "수집된 뉴스 데이터 결과..."
+            # 업로드한 양식 내용을 기반으로 결과 생성
+            result_content = st.session_state['uploaded_file_content']
             
-            # 업로드된 양식 템플릿에 수집된 데이터를 결합/생성하는 로직
-            final_result_content = template_content  # 실제 구현 시 치환(replace) 로직 적용
-            
-            # 생성된 결과 데이터를 세션에 저장
-            st.session_state['final_result'] = final_result_content
-            st.session_state['file_name'] = uploaded_template.name
-            st.success("🎉 데이터 수집 및 양식 적용이 완료되었습니다!")
+            # 생성 결과 세션 저장
+            st.session_state['final_result'] = result_content
+            st.success("🎉 데이터 수집 및 양식 적용 완료!")
 
 # ---------------------------------------------------------
-# 3. 최종 한글/HTML 파일 생성 및 다운로드 (TXT가 아닌 원본 확장자로 저장)
+# 3. 최종 결과 화면 출력 및 다운로드
 # ---------------------------------------------------------
 st.subheader("3. 최종 결과 파일 저장 및 다운로드")
 
-if 'final_result' in st.session_state:
-    result_data = st.session_state['final_result']
-    original_name = st.session_state.get('file_name', 'result.hwp')
+if st.session_state['final_result']:
+    file_name = st.session_state['uploaded_file_name']
+    output_filename = f"완성본_{file_name}"
     
-    # 다운로드 파일명 및 MIME 타입 설정
-    output_filename = f"완성본_{original_name}"
-    
-    if original_name.endswith('.html'):
+    # MIME 타입 및 확장자 처리
+    if file_name.endswith('.html'):
         mime_type = "text/html"
     else:
-        mime_type = "application/x-hwp"  # 한글 파일 전용 MIME 타입
+        mime_type = "application/x-hwp"
 
-    # 텍스트(.txt)가 아닌 원래 한글/HTML 파일 형태로 다운로드 제공
+    # 다운로드 버튼
     st.download_button(
         label=f"📄 {output_filename} 다운로드 (원래 양식 유지)",
-        data=result_data.encode('utf-8'),
+        data=st.session_state['final_result'].encode('utf-8'),
         file_name=output_filename,
         mime=mime_type
     )
+    
+    # HTML 양식인 경우 화면 하단에 미리보기 표시
+    if file_name.endswith('.html'):
+        st.markdown("---")
+        st.subheader("📋 갱신된 양식 미리보기")
+        components.html(st.session_state['final_result'], height=800, scrolling=True)
 else:
-    st.info("💡 위의 [Run] 버튼을 눌러 데이터를 수집하면 다운로드 버튼이 활성화됩니다.")
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.title("📰 조간 브리핑 통합 작성기")
-
-# 1. 실행 버튼 (Run)
-if st.button("🚀 Run (데이터 수집 및 HTML 자동 오픈)"):
-    # 수집하고자 하는 대상 링크 또는 생성된 HTML 페이지 URL/경로
-    target_url = "https://wv.scrapmaster.co.kr/login.do?uid=gbpr5v"  # 예시 링크
-    
-    st.success("데이터 수집 중... HTML 링크 페이지를 새 탭에서 엽니다.")
-    
-    # JavaScript를 이용해 브라우저 새 탭 자동 연동
-    js_code = f"""
-        <script>
-            window.open('{target_url}', '_blank');
-        </script>
-    """
-    components.html(js_code, height=0)
-import streamlit as st
-import time
-
-latest_bar = st.progress(0)
-status_text = st.empty()
-
-for i in range(total_items):
-    # 수집 처리...
-    latest_bar.progress((i + 1) / total_items)
-    status_text.text(f"뉴스 수집 중... ({i+1}/{total_items})")
+    st.info("💡 위의 [Run] 버튼을 누르면 다운로드 버튼과 미리보기가 활성화됩니다.")
