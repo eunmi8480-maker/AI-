@@ -180,7 +180,7 @@ footer {{
     word-break: keep-all;
 }}
 
-/* 시작 버튼: 박스는 작게, 글자는 크게 */
+/* 버튼 박스 크기는 유지하고 글자만 키웁니다. */
 .st-key-landing div[data-testid="stButton"] {{
     width: min(300px, calc(100% - 40px));
     margin: 55px auto 0;
@@ -189,21 +189,23 @@ footer {{
 .st-key-landing div[data-testid="stButton"] button {{
     width: 100%;
     min-height: 66px;
-    padding: 10px 12px;
+    padding: 8px;
     border: 0;
     border-radius: 10px;
     background: #ffffff;
     color: #11245b;
-    font-size: 30px;
+    font-size: 36px !important;
     font-weight: 800;
+    line-height: 1.1;
     white-space: nowrap;
 }}
 
 .st-key-landing div[data-testid="stButton"] button p {{
     margin: 0;
     color: inherit;
-    font-size: inherit;
+    font-size: inherit !important;
     font-weight: inherit;
+    line-height: inherit;
     white-space: nowrap;
 }}
 
@@ -252,7 +254,7 @@ footer {{
 
     .st-key-landing div[data-testid="stButton"] button {{
         min-height: 62px;
-        font-size: 26px;
+        font-size: 30px !important;
     }}
 }}
 </style>
@@ -324,7 +326,7 @@ else:
                 errors="replace",
             )
 
-        # 원본 HTML의 기능은 유지하고 색상·폰트만 적용합니다.
+        # 기존 작성기의 기능은 유지하고 스타일만 추가합니다.
         editor_css = f"""
         <style>
         {font_face_css}
