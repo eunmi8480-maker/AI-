@@ -40,7 +40,6 @@ if uploaded_file is not None:
 # ---------------------------------------------------------
 st.subheader("2. 데이터 수집 및 양식 적용")
 
-# 실제 뉴스 데이터 수집 함수 (연합뉴스 속보 데이터 크롤링 예시)
 def collect_latest_news():
     news_items = []
     url = "https://www.yna.co.kr/news"
@@ -67,16 +66,10 @@ if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
         st.warning("⚠️ 먼저 1번에서 양식 파일(HTML/HWP)을 업로드해 주세요.")
     else:
         with st.spinner("최신 뉴스 데이터를 실시간으로 수집하여 양식에 치환 중입니다..."):
-            # 1) 실시간 데이터 수집
             crawled_news = collect_latest_news()
-            
-            # 2) 수집된 데이터를 HTML/HWP 원본 양식 텍스트와 결합/치환
             base_content = st.session_state['uploaded_file_content']
-            
-            # 뉴스 데이터 치환 로직 (양식 내 주요 영역 태그/문구 반영)
             news_summary_text = "\n".join([f"• {news}" for news in crawled_news])
             
-            # 양식 원본 데이터 유지 및 수집 결과 치환
             result_content = base_content
             if "주요 뉴스 헤드라인" in result_content:
                 result_content = result_content.replace("주요 뉴스 헤드라인", f"주요 뉴스 헤드라인\n{news_summary_text}")
@@ -86,6 +79,28 @@ if st.button("🚀 데이터 수집 및 브리핑 생성 (Run)"):
             else:
                 result_content += f"\n\n[자동 수집 결과]\n{news_summary_text}"
             
-            # 세션에 최종 결과 저장
             st.session_state['final_result'] = result_content
-            st.success("
+            st.success("🎉 실시간 데이터 수집 및 파일 반영이 완료되었습니다!")
+
+# ---------------------------------------------------------
+# 3. 최종 결과 파일 다운로드
+# ---------------------------------------------------------
+st.subheader("3. 최종 결과 파일 저장 및 다운로드")
+
+if st.session_state['final_result']:
+    file_name = st.session_state['uploaded_file_name']
+    output_filename = f"완성본_{file_name}"
+    
+    if file_name.endswith('.html'):
+        mime_type = "text/html"
+    else:
+        mime_type = "application/x-hwp"
+
+    st.download_button(
+        label=f"📄 {output_filename} 다운로드 (원래 양식 유지)",
+        data=st.session_state['final_result'].encode('utf-8'),
+        file_name=output_filename,
+        mime=mime_type
+    )
+else:
+    st.info("💡 위의 [Run] 버튼을 누르면 실시간 데이터가 수집되어 다운로드 버튼이 활성화됩니다.")
