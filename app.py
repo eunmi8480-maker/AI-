@@ -13,6 +13,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+from keyword_extractor import extract_keywords, create_wordcloud
+
 import kepco_collect
 import kepco_hwp
 import kepco_images
@@ -1093,6 +1095,82 @@ elif st.session_state.page == "efficiency":
 
                         with st.expander("업로드된 엑셀 데이터 미리보기"):
                             st.dataframe(df_articles.head(10))
+
+                        # 기사 제목 기반 키워드 분석 (기존 기사 발췌 기능과 독립적으로 실행)
+                        st.markdown("### 🔎 기사 제목 키워드 추출")
+                        title_candidates = [
+                            col for col in df_articles.columns
+                            if "제목" in str(col).lower() or "title" in str(col).lower()
+                        ]
+                        if len(df_articles.columns) > 0:
+                            keyword_title_col = st.selectbox(
+                                "분석할 기사 제목 열",
+                                options=list(df_articles.columns),
+                                index=(list(df_articles.columns).index(title_candidates[0]) if title_candidates else 0),
+                                key="keyword_title_column",
+                            )
+                            keyword_count = st.slider(
+                                "추출할 키워드 수", min_value=10, max_value=100,
+                                value=40, step=5, key="keyword_top_n",
+                            )
+                            excluded_words = st.text_input(
+                                "추가 제외 단어 (쉼표로 구분, 선택사항)",
+                                key="keyword_excluded_words",
+                            )
+                            if st.button("🔍 키워드 분석하기", key="run_keyword_analysis"):
+                                titles = df_articles[keyword_title_col].dropna().astype(str).tolist()
+                                stopwords = [w.strip() for w in excluded_words.split(",") if w.strip()]
+                                keyword_result = extract_keywords(
+                                    titles, top_n=keyword_count, stopwords=stopwords,
+                                )
+                                st.session_state["keyword_analysis_result"] = keyword_result
+                                st.session_state["keyword_analysis_source"] = uploaded_article_file.name
+
+                            keyword_result = st.session_state.get("keyword_analysis_result")
+                            if (keyword_result is not None and
+                                    st.session_state.get("keyword_analysis_source") == uploaded_article_file.name):
+                                if not keyword_result:
+                                    st.warning("추출된 키워드가 없습니다. 제목 열을 확인해 주세요.")
+                                else:
+                                    keyword_df = pd.DataFrame(keyword_result, columns=["키워드", "빈도"])
+                                    st.dataframe(keyword_df, use_container_width=True, hide_index=True)
+                                    st.download_button(
+                                        "📥 키워드 CSV 다운로드",
+                                        data=keyword_df.to_csv(index=False).encode("utf-8-sig"),
+                                        file_name="기사_키워드_분석.csv", mime="text/csv",
+                                        key="download_keyword_csv",
+                                    )
+                                    try:
+                                        import tempfile
+                                        import os
+                                        font_candidates = [
+                                            BASE_DIR / "NanumGothic.ttf",
+                                            Path("/usr/share/fonts/truetype/nanum/NanumGothic.ttf"),
+                                            Path("/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf"),
+                                            Path("C:/Windows/Fonts/malgun.ttf"),
+                                        ]
+                                        font_path = next((str(f) for f in font_candidates if f.is_file()), None)
+                                        if font_path is None and any(
+                                            re.search(r"[가-힣]", word) for word, _ in keyword_result
+                                        ):
+                                            st.info("한글 워드클라우드를 위해 프로젝트에 NanumGothic.ttf 폰트를 추가해 주세요.")
+                                        else:
+                                            with tempfile.TemporaryDirectory() as temp_dir:
+                                                cloud_path = create_wordcloud(
+                                                    keyword_result,
+                                                    output_path=Path(temp_dir) / "keyword_wordcloud.png",
+                                                    font_path=font_path,
+                                                )
+                                                cloud_bytes = Path(cloud_path).read_bytes()
+                                            st.image(cloud_bytes, caption="기사 제목 키워드 워드클라우드")
+                                            st.download_button(
+                                                "📥 워드클라우드 PNG 다운로드",
+                                                data=cloud_bytes,
+                                                file_name="기사_워드클라우드.png",
+                                                mime="image/png", key="download_keyword_cloud",
+                                            )
+                                    except Exception as cloud_exc:
+                                        st.warning(f"워드클라우드 생성 불가: {cloud_exc}")
 
                         if st.button("🚀 유효 기사 발췌 및 요약 수행", key="run_article_scraping", type="primary"):
                             with st.spinner("언론사 페이지에 접속하여 유효 기사 본문 발췌 중..."):
