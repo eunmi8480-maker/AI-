@@ -72,6 +72,79 @@ def today_title():
     return f"'{now:%y}. {now.month}. {now.day}({WEEKDAYS[now.weekday()]})"
 
 
+def text_to_jpg(text, width=900):
+    """요약 텍스트를 이미지(JPG)로 만듭니다. 긴 줄은 자동으로 줄바꿈, 주소 줄은 파란색, ■ 소제목은 굵게."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    def load(paths, size):
+        for p in paths:
+            if Path(p).exists():
+                try:
+                    return ImageFont.truetype(p, size, index=0) if p.endswith(".ttc") else ImageFont.truetype(p, size)
+                except Exception:
+                    pass
+        return None
+
+    regular_paths = [
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+        "/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "C:/Windows/Fonts/malgun.ttf",
+    ]
+    bold_paths = [
+        "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
+        "/usr/share/fonts/truetype/nanum/NanumBarunGothicBold.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "C:/Windows/Fonts/malgunbd.ttf",
+    ]
+    size = 22
+    f_reg = load(regular_paths, size)
+    f_bold = load(bold_paths, size) or f_reg
+    if f_reg is None:
+        raise RuntimeError("한글 글꼴을 찾지 못했습니다 (packages.txt에 fonts-nanum이 필요합니다)")
+
+    pad = 30
+    max_w = width - pad * 2
+    probe = ImageDraw.Draw(Image.new("RGB", (10, 10)))
+
+    def wrap(line, font):
+        if not line:
+            return [""]
+        out, cur = [], ""
+        for ch in line:
+            if probe.textlength(cur + ch, font=font) > max_w and cur:
+                out.append(cur)
+                cur = ch
+            else:
+                cur += ch
+        out.append(cur)
+        return out
+
+    rows = []  # (text, font, color)
+    for raw in text.replace("\r\n", "\n").split("\n"):
+        line = raw.rstrip()
+        if line.startswith("■"):
+            font, color = f_bold, (0, 0, 0)
+        elif line.startswith(("http://", "https://")):
+            font, color = f_reg, (0, 102, 204)
+        else:
+            font, color = f_reg, (0, 0, 0)
+        for part in wrap(line, font):
+            rows.append((part, font, color))
+
+    line_h = int(size * 1.6)
+    height = pad * 2 + line_h * max(len(rows), 1)
+    img = Image.new("RGB", (width, height), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    y = pad
+    for part, font, color in rows:
+        draw.text((pad, y), part, font=font, fill=color)
+        y += line_h
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=92)
+    return buf.getvalue()
+
+
 # ==================================================
 # 2. 화면 및 서브탭 이동
 # ==================================================
@@ -1351,26 +1424,34 @@ elif st.session_state.page == "summary":
                         if st.button("🚀 요청 양식으로 TXT 변환", key="run_mss_python", type="primary"):
                             with st.spinner("요청하신 양식에 맞춰 변환 중..."):
 
+                                # 실제 엑셀 열 이름 기준으로 기사와 URL을 매칭합니다.
                                 cleaned_df = df_mss.dropna(how="all").fillna("")
+                                cleaned_df.columns = [str(c).strip() for c in cleaned_df.columns]
+                                required = ["기사 제목", "매체명"]
+                                missing = [c for c in required if c not in cleaned_df.columns]
+                                if missing:
+                                    raise ValueError(f"필수 열이 없습니다: {', '.join(missing)}")
 
-                                txt_lines = []
-                                txt_lines.append(f"< {today_title()}, 조간 주요 보도 >\n\n")
-                                txt_lines.append("■ 우리부 관련\n\n")
+                                txt_lines = [f"< {today_title()}, 조간 주요 보도 >\n\n"]
+                                for _, row in cleaned_df.iterrows():
+                                    title = str(row.get("기사 제목", "")).strip()
+                                    press = str(row.get("매체명", "")).strip()
+                                    if not title:
+                                        continue
+                                    if title.startswith("■"):
+                                        txt_lines.append(f"{title}\n\n")
+                                        continue
+                                    if not press:
+                                        continue
 
-                                for idx, row in cleaned_df.iterrows():
-                                    row_vals = [str(val).strip() for val in row.values if str(val).strip() != ""]
-                                    if len(row_vals) >= 2:
-                                        press = row_vals[0]
-                                        title = row_vals[1]
-                                        link = row_vals[2] if len(row_vals) > 2 else ""
-
-                                        txt_lines.append(f"ㅇ {press}, {title}\n")
-                                        if link:
-                                            txt_lines.append(f"{link}\n\n")
-                                        else:
-                                            txt_lines.append("\n")
-                                    elif len(row_vals) == 1:
-                                        txt_lines.append(f"ㅇ {row_vals[0]}\n\n")
+                                    naver_url = str(row.get("Naver수집URL", "")).strip()
+                                    original_url = str(row.get("기사URL", "")).strip()
+                                    url = next((u for u in (naver_url, original_url)
+                                                if u.startswith(("https://", "http://"))), "")
+                                    txt_lines.append(f"ㅇ {press}, {title}\n")
+                                    if url:
+                                        txt_lines.append(f"{url}\n")
+                                    txt_lines.append("\n")
 
                                 text_content = "".join(txt_lines)
 
@@ -1384,6 +1465,17 @@ elif st.session_state.page == "summary":
                                 mime="text/plain",
                                 key="download_mss_txt"
                             )
+
+                            try:
+                                st.download_button(
+                                    label="🖼️ 이미지 파일 다운로드 (.jpg)",
+                                    data=text_to_jpg(text_content),
+                                    file_name="중기부_조간요약_양식적용.jpg",
+                                    mime="image/jpeg",
+                                    key="download_mss_jpg"
+                                )
+                            except Exception as exc:
+                                st.warning(f"이미지(JPG) 변환에 실패했습니다: {exc}")
 
                     except Exception as exc:
                         st.error(f"데이터를 처리하는 도중 오류가 발생했습니다: {exc}")
